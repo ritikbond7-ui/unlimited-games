@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EV Rush — Free Electric Highway Racer Game</title>
+<meta name="description" content="EV Rush is a free browser endless-highway racer. Dodge traffic, grab battery pickups, and chase your best score in an original electric sports-car arcade game. No download needed.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="EV Rush — Free Electric Highway Racer Game">
+<meta property="og:description" content="Dodge traffic, grab batteries, beat the high score. Play free in your browser — no download, no signup.">
+<meta property="og:url" content="https://ev-rush-game.pages.dev/ev-rush.html">
+<meta property="og:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EV Rush — Free Electric Highway Racer Game">
+<meta name="twitter:description" content="Dodge traffic, grab batteries, beat the high score. Play free in your browser.">
+<meta name="twitter:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---------- Game Zone shared chrome ---------- */
+.site-header {
+  background: linear-gradient(180deg, rgba(14,23,48,0.88), rgba(7,11,22,0.55));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, rgba(34,230,240,0.8), transparent) 1;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45), 0 0 24px rgba(34,230,240,0.16);
+}
+.logo {
+  background: linear-gradient(92deg, #ffffff 5%, var(--cyan) 55%, #7dffc9 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+nav.main-nav a { transition: color 0.2s, text-shadow 0.2s; }
+.game-hero { text-align: center; margin: 6px 0 20px; }
+.game-hero h1 {
+  margin: 0; font-size: 2.4rem; font-weight: 800; letter-spacing: 4px;
+  background: linear-gradient(92deg, #c8f6ff 5%, var(--cyan) 50%, #7dffc9 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(34,230,240,0.45));
+}
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  max-width: 100%; margin: 0 auto 12px; padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(26,36,70,0.92), rgba(13,20,40,0.92));
+  border: 1px solid rgba(34,230,240,0.28); border-radius: 14px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.hud .score-box { text-align: left; }
+.hud .label { font-size: 0.68rem; color: var(--muted); letter-spacing: 3px; font-weight: 600; }
+.hud .value { font-size: 1.65rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(34,230,240,0.35); }
+.hud .value.best { color: var(--lime); text-shadow: 0 0 12px rgba(125,255,94,0.35); }
+.hud .icon-btns { display: flex; gap: 10px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(34,230,240,0.35);
+  background: linear-gradient(180deg, #16203c, #0d1428); color: var(--text); font-size: 1.2rem; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.icon-btn:hover { border-color: var(--cyan); box-shadow: 0 0 14px rgba(34,230,240,0.35); transform: translateY(-1px); }
+.icon-btn:active { transform: translateY(1px) scale(0.96); }
+.icon-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.stage {
+  position: relative; max-width: none; width: 100%; margin: 0 auto;
+  border: 2px solid transparent; border-radius: 16px; overflow: hidden;
+  background:
+    linear-gradient(#0a0f1e, #0a0f1e) padding-box,
+    linear-gradient(160deg, var(--cyan), rgba(34,230,240,0.15) 42%, var(--magenta)) border-box;
+  box-shadow: 0 0 34px rgba(34,230,240,0.28), 0 14px 44px rgba(0,0,0,0.55);
+  animation: stageGlow 4.5s ease-in-out infinite;
+}
+@keyframes stageGlow {
+  0%, 100% { box-shadow: 0 0 26px rgba(34,230,240,0.22), 0 14px 44px rgba(0,0,0,0.55); }
+  50% { box-shadow: 0 0 46px rgba(34,230,240,0.40), 0 14px 44px rgba(0,0,0,0.55); }
+}
+@media (prefers-reduced-motion: reduce) { .stage { animation: none; } }
+#gameCanvas { display: block; margin: 0 auto; touch-action: none; }
+.overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  background: rgba(5, 8, 18, 0.86); backdrop-filter: blur(2px);
+  padding: 24px; z-index: 5;
+}
+.overlay.hidden { display: none; }
+.overlay h2 {
+  margin: 0 0 10px; font-size: 2.2rem; letter-spacing: 4px; color: var(--cyan);
+  text-shadow: 0 0 18px rgba(34,230,240,0.8);
+}
+.overlay h2.crash { color: var(--magenta); text-shadow: 0 0 18px rgba(255,46,166,0.8); }
+.overlay p { color: var(--muted); margin: 6px 0 14px; line-height: 1.6; font-size: 0.95rem; }
+.overlay .keys { font-size: 0.85rem; color: var(--muted); margin-bottom: 18px; line-height: 1.8; }
+.overlay .keys b { color: var(--text); }
+.big-score { font-size: 3rem; font-weight: 800; color: #fff; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.newbest {
+  color: var(--lime); font-weight: 800; letter-spacing: 2px; margin: 6px 0 2px;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse { 50% { opacity: 0.45; } }
+.overlay .row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+.btn {
+  background: linear-gradient(180deg, rgba(34,230,240,0.18), rgba(34,230,240,0.04));
+  transition: transform 0.14s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.btn:hover { background: linear-gradient(180deg, rgba(34,230,240,0.30), rgba(34,230,240,0.08)); box-shadow: 0 0 26px rgba(34,230,240,0.55), 0 6px 18px rgba(0,0,0,0.5); }
+.btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+.btn.pink { background: linear-gradient(180deg, rgba(255,46,166,0.18), rgba(255,46,166,0.04)); }
+.btn.pink:hover { box-shadow: 0 0 26px rgba(255,46,166,0.55), 0 6px 18px rgba(0,0,0,0.5); }
+.site-footer { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--line), transparent) 1; padding: 24px 18px 28px; }
+.site-footer nav { margin-bottom: 10px; }
+.site-footer nav a { padding: 4px 2px; }
+.touch-controls { display: none; max-width: 100%; margin: 12px auto 0; justify-content: space-between; }
+.touch-controls button {
+  width: 47%; padding: 16px 0; font-size: 1.8rem; border-radius: 14px;
+  border: 2px solid rgba(34,230,240,0.55);
+  background: linear-gradient(180deg, rgba(20,30,58,0.95), rgba(10,16,34,0.95));
+  color: var(--cyan);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: transform 0.1s, background 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.touch-controls button:active { background: rgba(34,230,240,0.28); transform: scale(0.97); border-color: var(--cyan); }
+@media (pointer: coarse) { .touch-controls { display: flex; } }
+.controls-line { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 12px auto 0; max-width: 100%; }
+@media (max-width: 480px) {
+  .game-hero h1 { font-size: 1.7rem; letter-spacing: 3px; }
+  .hud { padding: 8px 12px; border-radius: 12px; }
+  .hud .value { font-size: 1.4rem; }
+  .overlay h2 { font-size: 1.7rem; }
+  .big-score { font-size: 2.4rem; }
+}
+
+/* ---- Coins + Garage (Unlimited Games module) ---- */
+.coin-chip { display:inline-flex; align-items:center; gap:6px; font-weight:800; color:#ffd12e; font-size:0.9rem; padding:6px 10px; border:1px solid rgba(255,209,46,0.35); border-radius:10px; background:rgba(60,44,8,0.5); white-space:nowrap; }
+.car-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; width:100%; max-width:360px; margin:12px auto 4px; }
+.car-card { background:rgba(20,30,58,0.92); border:1px solid rgba(34,230,240,0.25); border-radius:12px; padding:10px 6px; cursor:pointer; transition:transform 0.12s, box-shadow 0.15s, border-color 0.15s; }
+.car-card:hover { transform:translateY(-2px); }
+.car-card.selected { border-color:var(--lime); box-shadow:0 0 18px rgba(125,255,94,0.35); }
+.car-card canvas { width:46px; height:76px; }
+.car-card .cname { font-weight:800; font-size:0.85rem; margin:6px 0 2px; color:var(--text); }
+.car-card .cstat { font-size:0.75rem; color:var(--muted); min-height:2.3em; line-height:1.5; }
+.car-card .cstat .owned { color:var(--lime); font-weight:700; }
+.car-card .cstat .price { color:#ffd12e; font-weight:700; }
+.hint-line { color:#ffd12e; font-size:0.85rem; min-height:1.4em; margin:6px 0 0; }
+.wallet-line { color:var(--text) !important; font-size:1rem !important; font-weight:700 !important; }
+
+/* ---- Responsive stage + fullscreen (Game Zone module) ---- */
+.stage:fullscreen, .stage:-webkit-full-screen, .stage:-moz-full-screen, .stage:-ms-fullscreen {
+  border-radius: 0 !important; max-width: none !important; width: 100vw !important; height: 100vh !important; margin: 0;
+}
+.stage.fake-full {
+  position: fixed; inset: 0; z-index: 9999;
+  width: 100vw !important; height: 100dvh !important;
+  max-width: none !important; border-radius: 0; margin: 0;
+}
+
+</style>
+<meta name="google-adsense-account" content="ca-pub-9282230786844335">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9282230786844335" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="logo" href="index.html"><span class="bolt">🎮</span> UNLIMITED GAMES</a>
+    <nav class="main-nav">
+      <a href="index.html" class="active">← All Games</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="game-hero">
+    <h1>⚡ EV RUSH</h1>
+  </div>
+
+  <div class="hud">
+    <div class="score-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="scoreVal">0</div>
+    </div>
+    <div class="icon-btns">
+      <button class="icon-btn" id="muteBtn" title="Mute / unmute sound (M)" aria-label="Mute sound">🔊</button>
+      <button class="icon-btn" id="pauseBtn" title="Pause / resume (P)" aria-label="Pause game">⏸</button>
+      <button class="icon-btn" id="fsBtn" title="Fullscreen (F)" aria-label="Toggle fullscreen">⛶</button>
+    </div>
+    <div class="coin-chip" title="Coins collected this run">🪙 <span id="runCoinsVal">0</span></div>
+    <div class="score-box" style="text-align:right">
+      <div class="label">BEST</div>
+      <div class="value best" id="bestVal">0</div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <div class="overlay" id="startScreen">
+      <h2>EV RUSH</h2>
+      <div class="keys"><b>Steer:</b> ← → / A D &nbsp;•&nbsp; <b>Pause:</b> P</div>
+      <div class="row">
+        <button class="btn" id="startBtn">START ENGINE</button>
+        <button class="btn" id="garageBtn">🚗 GARAGE</button>
+      </div>
+      <p class="meta wallet-line" style="margin-top:14px">🪙 <span id="walletVal">0</span></p>
+      <p class="meta">Press Enter to start</p>
+    </div>
+
+    <div class="overlay hidden" id="garageScreen">
+      <h2>GARAGE</h2>
+      <p class="meta wallet-line">Wallet: 🪙 <span id="garageWalletVal">0</span></p>
+      <div class="car-grid" id="carGrid"></div>
+      <p class="hint-line" id="garageHint"></p>
+      <div class="row">
+        <button class="btn" id="garageBackBtn">← BACK</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="pauseScreen">
+      <h2>PAUSED</h2>
+      <div class="row">
+        <button class="btn" id="resumeBtn">RESUME</button>
+        <button class="btn pink" id="restartBtnPause">RESTART</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="gameOverScreen">
+      <h2 class="crash">CRASHED</h2>
+      <div class="newbest hidden" id="newBestTag">★ NEW BEST ★</div>
+      <div class="label" style="color:var(--muted);letter-spacing:2px;font-size:0.75rem">FINAL SCORE</div>
+      <div class="big-score" id="finalScore">0</div>
+      <p id="bestLine">Best: 0</p>
+      <p id="coinLine" style="color:#ffd12e;font-weight:700">Coins +0 &middot; Total 🪙 0</p>
+      <div class="row">
+        <button class="btn" id="restartBtn">RACE AGAIN</button>
+      </div>
+      <p class="meta" style="margin-top:12px">Press Enter to restart</p>
+    </div>
+  </div>
+
+  <div class="touch-controls">
+    <button id="leftBtn" aria-label="Steer left">◀</button>
+    <button id="rightBtn" aria-label="Steer right">▶</button>
+  </div>
+
+  <p class="controls-line">←/→ or A/D to steer, P pauses.</p>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <p>© 2026 Unlimited Games · Made with <span class="heart">⚡</span> by Ritik Raj · Play free in your browser</p>
+</footer>
+
+<script>
+/* ============================================================
+   EV RUSH — original endless highway racer
+   Canvas only. No external assets. Plain ES5-ish JS.
+   ============================================================ */
+(function () {
+'use strict';
+
+/* ---------------- Canvas & constants ---------------- */
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var W = canvas.width;    // 400
+var H = canvas.height;   // 600
+
+var LANES = 4;
+var ROAD_X0 = 14, ROAD_X1 = W - 14;
+var LANE_W = (ROAD_X1 - ROAD_X0) / LANES;
+
+function laneX(i) { return ROAD_X0 + LANE_W * (i + 0.5); }
+
+var ST = { START: 0, PLAY: 1, PAUSE: 2, OVER: 3 };
+var state = ST.START;
+
+/* ---------------- DOM refs ---------------- */
+var scoreVal = document.getElementById('scoreVal');
+var bestVal = document.getElementById('bestVal');
+var finalScoreEl = document.getElementById('finalScore');
+var bestLine = document.getElementById('bestLine');
+var newBestTag = document.getElementById('newBestTag');
+var startScreen = document.getElementById('startScreen');
+var pauseScreen = document.getElementById('pauseScreen');
+var gameOverScreen = document.getElementById('gameOverScreen');
+var startBtn = document.getElementById('startBtn');
+var resumeBtn = document.getElementById('resumeBtn');
+var restartBtn = document.getElementById('restartBtn');
+var restartBtnPause = document.getElementById('restartBtnPause');
+var pauseBtn = document.getElementById('pauseBtn');
+var muteBtn = document.getElementById('muteBtn');
+var leftBtn = document.getElementById('leftBtn');
+var rightBtn = document.getElementById('rightBtn');
+var runCoinsVal = document.getElementById('runCoinsVal');
+var coinLine = document.getElementById('coinLine');
+var garageScreen = document.getElementById('garageScreen');
+var carGrid = document.getElementById('carGrid');
+var garageHint = document.getElementById('garageHint');
+var garageBtn = document.getElementById('garageBtn');
+var garageBackBtn = document.getElementById('garageBackBtn');
+
+/* ---------------- Best score (localStorage, guarded) ---------------- */
+var best = 0;
+try { best = parseInt(localStorage.getItem('evrush_best') || '0', 10) || 0; } catch (e) { best = 0; }
+function saveBest() {
+  try { localStorage.setItem('evrush_best', String(best)); } catch (e) { /* storage unavailable */ }
+}
+bestVal.textContent = best;
+
+/* ---------------- Coins wallet + garage (localStorage, guarded) ---------------- */
+var CARS = [
+  { id: 'volt',    name: 'Volt',      price: 0,    body: '#0e5f74', glow: '#22e6f0' },
+  { id: 'blaze',   name: 'Blaze',     price: 150,  body: '#8a2410', glow: '#ff6a2e', acc: '#ffd12e' },
+  { id: 'phantom', name: 'Phantom',   price: 400,  body: '#17102b', glow: '#b04dff', acc: '#5a2ea6' },
+  { id: 'gold',    name: 'Gold Rush', price: 1000, body: '#6b4a08', glow: '#ffd12e', acc: '#fff3c4' }
+];
+var CAR_IDS = { volt: 1, blaze: 1, phantom: 1, gold: 1 }; // whitelist: only these ids are trusted
+function carById(id) {
+  for (var i = 0; i < CARS.length; i++) if (CARS[i].id === id) return CARS[i];
+  return CARS[0];
+}
+var coins = 0, owned = ['volt'], carId = 'volt';
+try {
+  var _c = parseInt(localStorage.getItem('evrush_coins') || '0', 10);
+  coins = (isNaN(_c) || _c < 0) ? 0 : _c; // tamper-proof: NaN / negative -> 0
+} catch (e) { coins = 0; }
+try {
+  var _o = JSON.parse(localStorage.getItem('evrush_owned') || '["volt"]');
+  if (Array.isArray(_o) && _o.length) {
+    var _ok = [];
+    for (var i = 0; i < _o.length; i++) if (CAR_IDS[_o[i]] && _ok.indexOf(_o[i]) < 0) _ok.push(_o[i]);
+    if (_ok.length) owned = _ok;
+  }
+} catch (e) { owned = ['volt']; } // corrupt JSON -> safe default
+try {
+  var _cid = localStorage.getItem('evrush_car');
+  if (_cid && CAR_IDS[_cid]) carId = _cid;
+} catch (e) { carId = 'volt'; }
+if (owned.indexOf(carId) < 0) carId = 'volt';
+function saveCoins() { try { localStorage.setItem('evrush_coins', String(coins)); } catch (e) {} }
+function saveOwned() { try { localStorage.setItem('evrush_owned', JSON.stringify(owned)); } catch (e) {} }
+function saveCar() { try { localStorage.setItem('evrush_car', carId); } catch (e) {} }
+function updateWallet() {
+  var w1 = document.getElementById('walletVal');
+  var w2 = document.getElementById('garageWalletVal');
+  if (w1) w1.textContent = coins;
+  if (w2) w2.textContent = coins;
+}
+updateWallet();
+var audioCtx = null;
+var muted = false;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+}
+function beep(freq, dur, type, vol) {
+  if (muted) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  try {
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.07, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch (e) { /* ignore */ }
+}
+function sfxPickup() { beep(880, 0.09, 'square', 0.05); setTimeout(function () { beep(1318, 0.12, 'square', 0.05); }, 70); }
+function sfxNearMiss() { beep(1567, 0.07, 'triangle', 0.05); }
+function sfxCoin() { beep(1175, 0.08, 'square', 0.05); setTimeout(function () { beep(1760, 0.12, 'square', 0.05); }, 65); }
+function sfxCrash() { beep(150, 0.35, 'sawtooth', 0.10); setTimeout(function () { beep(80, 0.45, 'sawtooth', 0.09); }, 110); }
+function sfxClick() { beep(520, 0.06, 'triangle', 0.05); }
+
+/* ---------------- Game state ---------------- */
+var player, traffic, batteries, coinPicks, particles, floaters, streaks;
+var score, speed, elapsed, spawnTimer, battTimer, coinTimer, dashOffset, flashT, runCoins;
+
+var TRAFFIC_COLORS = ['#ff4d5e', '#ff9f2e', '#b04dff', '#ffd12e', '#4da6ff'];
+
+function resetGame() {
+  player = {
+    x: laneX(1), y: H - 110, w: 46, h: 78,
+    steer: 0, // -1 left, +1 right
+    tilt: 0
+  };
+  traffic = [];
+  batteries = [];
+  coinPicks = [];
+  particles = [];
+  floaters = [];
+  streaks = [];
+  for (var i = 0; i < 36; i++) {
+    streaks.push({ x: Math.random() * W, y: Math.random() * H, len: 18 + Math.random() * 30 });
+  }
+  score = 0; speed = 270; elapsed = 0;
+  spawnTimer = 0.9; battTimer = 2.2; coinTimer = 1.4; dashOffset = 0; flashT = 0;
+  runCoins = 0;
+  updateHUD();
+}
+
+function updateHUD() {
+  scoreVal.textContent = Math.floor(score);
+  bestVal.textContent = best;
+  if (runCoinsVal) runCoinsVal.textContent = runCoins;
+}
+
+function showOverlay(el) {
+  startScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  garageScreen.classList.add('hidden');
+  if (el) el.classList.remove('hidden');
+}
+
+/* ---------------- Input: keyboard ---------------- */
+var keys = { left: false, right: false };
+var inGarage = false;
+window.addEventListener('keydown', function (e) {
+  var k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { keys.left = true; e.preventDefault(); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') { keys.right = true; e.preventDefault(); }
+  else if (k === 'p' || k === 'P') { togglePause(); }
+  else if (k === 'm' || k === 'M') { toggleMute(); }
+  else if (k === 'Enter' || k === ' ') {
+    if (inGarage) { closeGarage(); e.preventDefault(); }
+    else if (state === ST.START) { startGame(); e.preventDefault(); }
+    else if (state === ST.OVER) { startGame(); e.preventDefault(); }
+  }
+});
+window.addEventListener('keyup', function (e) {
+  var k = e.key;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') keys.left = false;
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') keys.right = false;
+});
+
+/* ---------------- Input: touch swipe on canvas ---------------- */
+var touching = false;
+function canvasX(clientX) {
+  var r = canvas.getBoundingClientRect();
+  return (clientX - r.left) * (W / r.width);
+}
+canvas.addEventListener('touchstart', function (e) {
+  touching = true;
+  player.targetX = canvasX(e.touches[0].clientX);
+  e.preventDefault();
+}, { passive: false });
+canvas.addEventListener('touchmove', function (e) {
+  if (touching) player.targetX = canvasX(e.touches[0].clientX);
+  e.preventDefault();
+}, { passive: false });
+canvas.addEventListener('touchend', function () { touching = false; player.targetX = null; });
+
+/* ---------------- Input: on-screen buttons ---------------- */
+function bindHold(btn, key) {
+  var on = function (e) { keys[key] = true; ensureAudio(); e.preventDefault(); };
+  var off = function (e) { keys[key] = false; if (e) e.preventDefault(); };
+  btn.addEventListener('touchstart', on, { passive: false });
+  btn.addEventListener('touchend', off);
+  btn.addEventListener('touchcancel', off);
+  btn.addEventListener('mousedown', on);
+  btn.addEventListener('mouseup', off);
+  btn.addEventListener('mouseleave', off);
+}
+bindHold(leftBtn, 'left');
+bindHold(rightBtn, 'right');
+
+/* ---------------- Buttons & overlays ---------------- */
+function startGame() {
+  ensureAudio(); sfxClick();
+  resetGame();
+  state = ST.PLAY;
+  showOverlay(null);
+}
+function togglePause() {
+  if (state === ST.PLAY) {
+    state = ST.PAUSE; sfxClick(); showOverlay(pauseScreen);
+  } else if (state === ST.PAUSE) {
+    state = ST.PLAY; sfxClick(); showOverlay(null);
+  }
+}
+function toggleMute() {
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+}
+function gameOver() {
+  state = ST.OVER;
+  sfxCrash();
+  flashT = 0.5;
+  // explosion particles
+  for (var i = 0; i < 46; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 60 + Math.random() * 260;
+    particles.push({
+      x: player.x, y: player.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      life: 0.5 + Math.random() * 0.6, max: 1.1,
+      color: ['#ff4d5e', '#ffd12e', '#22e6f0'][i % 3], size: 2 + Math.random() * 4
+    });
+  }
+  var fs = Math.floor(score);
+  var isBest = fs > best;
+  if (isBest) { best = fs; saveBest(); }
+  finalScoreEl.textContent = fs;
+  bestLine.textContent = 'Best: ' + best;
+  coinLine.textContent = 'Coins +' + runCoins + ' \u00b7 Total \uD83E\uDE99 ' + coins;
+  newBestTag.classList.toggle('hidden', !isBest);
+  updateHUD();
+  showOverlay(gameOverScreen);
+}
+
+/* ---------------- Garage UI ---------------- */
+function previewCar(cv, car) {
+  var g = cv.getContext('2d');
+  var saved = ctx;
+  ctx = g;
+  g.clearRect(0, 0, cv.width, cv.height);
+  drawCar(cv.width / 2, cv.height / 2, 40, 68, car.body, car.glow, 0, car.acc);
+  ctx = saved;
+}
+function buildGarage() {
+  carGrid.innerHTML = '';
+  for (var i = 0; i < CARS.length; i++) {
+    (function (car) {
+      var card = document.createElement('div');
+      card.className = 'car-card' + (car.id === carId ? ' selected' : '');
+      var cv = document.createElement('canvas');
+      cv.width = 46; cv.height = 76;
+      card.appendChild(cv);
+      var nm = document.createElement('div');
+      nm.className = 'cname'; nm.textContent = car.name;
+      card.appendChild(nm);
+      var st = document.createElement('div');
+      st.className = 'cstat';
+      var isOwned = owned.indexOf(car.id) >= 0;
+      if (car.id === carId) st.innerHTML = '<span class="owned">SELECTED \u2713</span>';
+      else if (isOwned) st.innerHTML = '<span class="owned">OWNED \u2014 tap to select</span>';
+      else st.innerHTML = '<span class="price">\uD83E\uDE99 ' + car.price + '</span>';
+      card.appendChild(st);
+      card.addEventListener('click', function () { garagePick(car); });
+      carGrid.appendChild(card);
+      previewCar(cv, car);
+    })(CARS[i]);
+  }
+  updateWallet();
+}
+function garagePick(car) {
+  ensureAudio(); sfxClick();
+  if (owned.indexOf(car.id) >= 0) {
+    carId = car.id; saveCar();
+    garageHint.textContent = car.name + ' selected!';
+  } else if (coins >= car.price) {
+    coins -= car.price;
+    owned.push(car.id);
+    carId = car.id;
+    saveCoins(); saveOwned(); saveCar();
+    garageHint.textContent = car.name + ' unlocked! \uD83E\uDE99';
+  } else {
+    garageHint.textContent = 'Need ' + (car.price - coins) + ' more coins \uD83E\uDE99';
+  }
+  buildGarage();
+}
+function openGarage() {
+  ensureAudio(); sfxClick();
+  inGarage = true;
+  garageHint.textContent = '';
+  buildGarage();
+  showOverlay(garageScreen);
+}
+function closeGarage() {
+  sfxClick();
+  inGarage = false;
+  updateWallet();
+  showOverlay(startScreen);
+}
+garageBtn.addEventListener('click', openGarage);
+garageBackBtn.addEventListener('click', closeGarage);
+
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+restartBtnPause.addEventListener('click', startGame);
+resumeBtn.addEventListener('click', togglePause);
+pauseBtn.addEventListener('click', function () { if (state === ST.PLAY || state === ST.PAUSE) togglePause(); });
+muteBtn.addEventListener('click', toggleMute);
+
+/* ---------------- Spawners ---------------- */
+function laneFree(lane, minY) {
+  for (var i = 0; i < traffic.length; i++) {
+    var c = traffic[i];
+    if (c.lane === lane && c.y < minY) return false;
+  }
+  return true;
+}
+function spawnTraffic() {
+  // pick a lane that has no car near the top
+  var freeLanes = [];
+  for (var l = 0; l < LANES; l++) if (laneFree(l, 170)) freeLanes.push(l);
+  if (freeLanes.length === 0) return;
+  var lane = freeLanes[(Math.random() * freeLanes.length) | 0];
+  traffic.push({
+    lane: lane, x: laneX(lane), y: -90, w: 46, h: 78,
+    spd: speed * (0.50 + Math.random() * 0.22),
+    color: TRAFFIC_COLORS[(Math.random() * TRAFFIC_COLORS.length) | 0],
+    passed: false, nearMissed: false
+  });
+  // occasionally a second car in another free lane (never block all lanes)
+  if (Math.random() < 0.28 && freeLanes.length > 2) {
+    var others = freeLanes.filter(function (l) { return l !== lane; });
+    var lane2 = others[(Math.random() * others.length) | 0];
+    traffic.push({
+      lane: lane2, x: laneX(lane2), y: -190, w: 46, h: 78,
+      spd: speed * (0.50 + Math.random() * 0.22),
+      color: TRAFFIC_COLORS[(Math.random() * TRAFFIC_COLORS.length) | 0],
+      passed: false, nearMissed: false
+    });
+  }
+}
+function spawnBattery() {
+  var lane = (Math.random() * LANES) | 0;
+  batteries.push({ x: laneX(lane), y: -40, w: 26, h: 38, spd: speed * 0.62, bob: Math.random() * 6.28 });
+}
+function spawnCoin() {
+  var lane = (Math.random() * LANES) | 0;
+  coinPicks.push({ x: laneX(lane), y: -30, r: 13, spd: speed * 0.62, bob: Math.random() * 6.28 });
+}
+function addFloater(x, y, txt, color) {
+  floaters.push({ x: x, y: y, txt: txt, color: color || '#fff', life: 1.0 });
+}
+function burst(x, y, color, n) {
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 40 + Math.random() * 160;
+    particles.push({
+      x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60,
+      life: 0.4 + Math.random() * 0.4, max: 0.8,
+      color: color, size: 2 + Math.random() * 3
+    });
+  }
+}
+
+/* ---------------- Collision ---------------- */
+function rectsOverlap(a, b, pad) {
+  pad = pad || 0;
+  return a.x - a.w / 2 + pad < b.x + b.w / 2 - pad &&
+         a.x + a.w / 2 - pad > b.x - b.w / 2 + pad &&
+         a.y - a.h / 2 + pad < b.y + b.h / 2 - pad &&
+         a.y + a.h / 2 - pad > b.y - b.h / 2 + pad;
+}
+
+/* ---------------- Update ---------------- */
+function update(dt) {
+  elapsed += dt;
+  // difficulty ramp
+  speed = Math.min(720, 270 + elapsed * 6);
+  score += speed * dt * 0.02;
+  dashOffset = (dashOffset + speed * dt) % 44;
+
+  // player steering
+  var dir = 0;
+  if (keys.left) dir -= 1;
+  if (keys.right) dir += 1;
+  if (touching && player.targetX != null) {
+    var dx = player.targetX - player.x;
+    if (Math.abs(dx) > 4) dir = dx > 0 ? 1 : -1;
+  }
+  var steerSpeed = touching && player.targetX != null ? 520 : 340;
+  player.x += dir * steerSpeed * dt;
+  var minX = ROAD_X0 + player.w / 2 + 2, maxX = ROAD_X1 - player.w / 2 - 2;
+  if (player.x < minX) player.x = minX;
+  if (player.x > maxX) player.x = maxX;
+  player.tilt += ((dir * 0.16) - player.tilt) * Math.min(1, dt * 10);
+
+  // spawn traffic
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnTraffic();
+    var interval = Math.max(0.42, 1.05 - elapsed * 0.012);
+    spawnTimer = interval * (0.8 + Math.random() * 0.4);
+  }
+  // spawn batteries
+  battTimer -= dt;
+  if (battTimer <= 0) {
+    spawnBattery();
+    battTimer = 2.6 + Math.random() * 2.4;
+  }
+  // spawn coins
+  coinTimer -= dt;
+  if (coinTimer <= 0) {
+    spawnCoin();
+    coinTimer = 1.8 + Math.random() * 2.2;
+  }
+
+  // traffic movement + scoring + collisions
+  for (var i = traffic.length - 1; i >= 0; i--) {
+    var c = traffic[i];
+    c.y += c.spd * dt;
+    // overtake bonus
+    if (!c.passed && c.y - c.h / 2 > player.y + player.h / 2) {
+      c.passed = true;
+      score += 10;
+    }
+    // near-miss: close horizontally while overlapping vertically, no crash
+    if (!c.nearMissed && !c.passed) {
+      var vOverlap = Math.abs(c.y - player.y) < (c.h + player.h) / 2;
+      if (vOverlap) {
+        var gap = Math.abs(c.x - player.x) - (c.w + player.w) / 2;
+        if (gap > -6 && gap < 16) {
+          c.nearMissed = true;
+          score += 25;
+          sfxNearMiss();
+          addFloater(player.x, player.y - 70, 'NEAR MISS +25', '#ffd12e');
+        }
+      }
+    }
+    // crash check
+    if (rectsOverlap(player, c, 9)) {
+      gameOver();
+      return;
+    }
+    if (c.y - c.h / 2 > H + 60) traffic.splice(i, 1);
+  }
+
+  // batteries
+  for (var j = batteries.length - 1; j >= 0; j--) {
+    var b = batteries[j];
+    b.y += b.spd * dt;
+    b.bob += dt * 6;
+    if (rectsOverlap(player, b, 2)) {
+      score += 50;
+      sfxPickup();
+      addFloater(b.x, b.y - 20, '+50', '#7dff5e');
+      burst(b.x, b.y, '#7dff5e', 14);
+      batteries.splice(j, 1);
+      continue;
+    }
+    if (b.y - b.h > H + 40) batteries.splice(j, 1);
+  }
+
+  // coins: collect on touch
+  for (var q = coinPicks.length - 1; q >= 0; q--) {
+    var cp = coinPicks[q];
+    cp.y += cp.spd * dt;
+    cp.bob += dt * 6;
+    if (Math.abs(cp.x - player.x) < (player.w / 2 + cp.r) &&
+        Math.abs(cp.y - player.y) < (player.h / 2 + cp.r)) {
+      runCoins++;
+      coins++;
+      saveCoins();
+      sfxCoin();
+      addFloater(cp.x, cp.y - 24, '+1 \uD83E\uDE99', '#ffd12e');
+      burst(cp.x, cp.y, '#ffd12e', 12);
+      coinPicks.splice(q, 1);
+      continue;
+    }
+    if (cp.y - cp.r > H + 40) coinPicks.splice(q, 1);
+  }
+
+  // particles
+  for (var p = particles.length - 1; p >= 0; p--) {
+    var pt = particles[p];
+    pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 260 * dt;
+    pt.life -= dt;
+    if (pt.life <= 0) particles.splice(p, 1);
+  }
+  // floating texts
+  for (var f = floaters.length - 1; f >= 0; f--) {
+    var ft = floaters[f];
+    ft.y -= 46 * dt; ft.life -= dt;
+    if (ft.life <= 0) floaters.splice(f, 1);
+  }
+  // speed streaks
+  for (var s = 0; s < streaks.length; s++) {
+    var st = streaks[s];
+    st.y += (speed * 1.9 + 120) * dt;
+    if (st.y > H + 40) { st.y = -40; st.x = Math.random() * W; }
+  }
+  if (flashT > 0) flashT -= dt;
+
+  updateHUD();
+}
+
+/* ---------------- Drawing ---------------- */
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawRoad() {
+  // asphalt
+  var g = ctx.createLinearGradient(ROAD_X0, 0, ROAD_X1, 0);
+  g.addColorStop(0, '#0b1122'); g.addColorStop(0.5, '#101a36'); g.addColorStop(1, '#0b1122');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // side shoulders
+  ctx.fillStyle = '#070b16';
+  ctx.fillRect(0, 0, ROAD_X0, H);
+  ctx.fillRect(ROAD_X1, 0, W - ROAD_X0, H);
+
+  // neon edge lines
+  ctx.save();
+  ctx.shadowColor = '#22e6f0'; ctx.shadowBlur = 12;
+  ctx.fillStyle = '#22e6f0';
+  ctx.fillRect(ROAD_X0 - 3, 0, 3, H);
+  ctx.fillRect(ROAD_X1, 0, 3, H);
+  ctx.restore();
+
+  // lane dashes
+  ctx.fillStyle = 'rgba(160,190,255,0.55)';
+  for (var l = 1; l < LANES; l++) {
+    var x = ROAD_X0 + LANE_W * l;
+    for (var y = -44 + (dashOffset % 44); y < H + 44; y += 44) {
+      ctx.fillRect(x - 2, y, 4, 24);
+    }
+  }
+
+  // speed streaks
+  ctx.strokeStyle = 'rgba(34,230,240,0.16)';
+  ctx.lineWidth = 2;
+  for (var s = 0; s < streaks.length; s++) {
+    var st = streaks[s];
+    ctx.beginPath();
+    ctx.moveTo(st.x, st.y);
+    ctx.lineTo(st.x, st.y + st.len);
+    ctx.stroke();
+  }
+}
+
+function drawCar(x, y, w, h, body, glow, tilt, acc) {
+  ctx.save();
+  ctx.translate(x, y);
+  if (tilt) ctx.rotate(tilt);
+  ctx.shadowColor = glow; ctx.shadowBlur = 16;
+  // body
+  ctx.fillStyle = body;
+  roundRect(-w / 2, -h / 2, w, h, 9);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // windshield + roof
+  ctx.fillStyle = 'rgba(10,16,34,0.92)';
+  roundRect(-w / 2 + 7, -h / 2 + 10, w - 14, 20, 5); ctx.fill();
+  ctx.fillStyle = 'rgba(20,30,60,0.95)';
+  roundRect(-w / 2 + 6, -h / 2 + 32, w - 12, 22, 5); ctx.fill();
+  // neon trim
+  ctx.strokeStyle = glow; ctx.lineWidth = 2;
+  roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, h - 6, 8); ctx.stroke();
+  // racing stripe (garage cars)
+  if (acc) {
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = acc;
+    roundRect(-5, -h / 2 + 4, 10, h - 8, 4); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  // headlights (front = top)
+  ctx.fillStyle = '#fffbe8';
+  ctx.beginPath(); ctx.arc(-w / 2 + 8, -h / 2 + 4, 4, 0, 6.3); ctx.fill();
+  ctx.beginPath(); ctx.arc(w / 2 - 8, -h / 2 + 4, 4, 0, 6.3); ctx.fill();
+  // taillights (rear = bottom)
+  ctx.fillStyle = '#ff2e4d';
+  ctx.fillRect(-w / 2 + 5, h / 2 - 7, 10, 4);
+  ctx.fillRect(w / 2 - 15, h / 2 - 7, 10, 4);
+  ctx.restore();
+}
+
+function drawBattery(b) {
+  var bobX = Math.sin(b.bob) * 4;
+  ctx.save();
+  ctx.translate(b.x + bobX, b.y);
+  ctx.shadowColor = '#7dff5e'; ctx.shadowBlur = 14;
+  // cell capsule
+  ctx.fillStyle = 'rgba(20,60,24,0.95)';
+  roundRect(-b.w / 2, -b.h / 2, b.w, b.h, 8); ctx.fill();
+  ctx.strokeStyle = '#7dff5e'; ctx.lineWidth = 2;
+  roundRect(-b.w / 2, -b.h / 2, b.w, b.h, 8); ctx.stroke();
+  // lightning bolt
+  ctx.fillStyle = '#7dff5e';
+  ctx.beginPath();
+  ctx.moveTo(3, -b.h / 2 + 5);
+  ctx.lineTo(-7, 3);
+  ctx.lineTo(-1, 3);
+  ctx.lineTo(-3, b.h / 2 - 5);
+  ctx.lineTo(7, -3);
+  ctx.lineTo(1, -3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCoin(c) {
+  var bobX = Math.sin(c.bob) * 4;
+  ctx.save();
+  ctx.translate(c.x + bobX, c.y);
+  ctx.shadowColor = '#ffd12e'; ctx.shadowBlur = 14;
+  var g = ctx.createRadialGradient(-4, -4, 2, 0, 0, c.r + 3);
+  g.addColorStop(0, '#fff3c4'); g.addColorStop(0.55, '#ffd12e'); g.addColorStop(1, '#b8860b');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, c.r, 0, 6.3); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#8a5f00'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, 0, c.r, 0, 6.3); ctx.stroke();
+  ctx.strokeStyle = 'rgba(138,95,0,0.85)';
+  ctx.beginPath(); ctx.arc(0, 0, c.r - 5, 0, 6.3); ctx.stroke();
+  ctx.restore();
+}
+
+function render() {
+  drawRoad();
+
+  // batteries
+  for (var i = 0; i < batteries.length; i++) drawBattery(batteries[i]);
+
+  // coins
+  for (var qi = 0; qi < coinPicks.length; qi++) drawCoin(coinPicks[qi]);
+
+  // traffic
+  for (var t = 0; t < traffic.length; t++) {
+    var c = traffic[t];
+    drawCar(c.x, c.y, c.w, c.h, '#232c4e', c.color, 0);
+  }
+
+  // player (drawn even on game-over, buried in particles)
+  if (player) {
+    var pc = carById(carId);
+    drawCar(player.x, player.y, player.w, player.h, pc.body, pc.glow, player.tilt, pc.acc);
+  }
+
+  // particles
+  for (var p = 0; p < particles.length; p++) {
+    var pt = particles[p];
+    ctx.globalAlpha = Math.max(0, pt.life / pt.max);
+    ctx.fillStyle = pt.color;
+    ctx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+  }
+  ctx.globalAlpha = 1;
+
+  // floating texts
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 17px "Segoe UI", Arial, sans-serif';
+  for (var f = 0; f < floaters.length; f++) {
+    var ft = floaters[f];
+    ctx.globalAlpha = Math.max(0, Math.min(1, ft.life * 1.6));
+    ctx.fillStyle = ft.color;
+    ctx.shadowColor = ft.color; ctx.shadowBlur = 8;
+    ctx.fillText(ft.txt, ft.x, ft.y);
+  }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+  // crash flash
+  if (flashT > 0) {
+    ctx.fillStyle = 'rgba(255,46,80,' + (flashT * 0.9).toFixed(2) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // speed readout (bottom-left, subtle)
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 13px monospace';
+  ctx.fillStyle = 'rgba(154,167,199,0.85)';
+  ctx.fillText(Math.round(speed * 0.28) + ' km/h', 10, H - 12);
+}
+
+/* ---------------- Main loop ---------------- */
+var lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = (t - lastT) / 1000;
+  lastT = t;
+  if (!(dt > 0)) return;
+  if (dt > 0.05) dt = 0.05; // clamp tab-switch jumps
+  if (state === ST.PLAY) update(dt);
+  else if (state === ST.OVER && particles.length) {
+    // let crash particles settle on game-over screen
+    for (var p = particles.length - 1; p >= 0; p--) {
+      var pt = particles[p];
+      pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 260 * dt;
+      pt.life -= dt;
+      if (pt.life <= 0) particles.splice(p, 1);
+    }
+    if (flashT > 0) flashT -= dt;
+  }
+  render();
+}
+
+/* ---------------- Init ---------------- */
+resetGame();
+showOverlay(startScreen);
+requestAnimationFrame(function (t) { lastT = t; requestAnimationFrame(frame); });
+
+})();
+</script>
+<script>
+/* === Game Zone: responsive stage + fullscreen-on-play (shared module) === */
+(function () {
+'use strict';
+var stage = document.getElementById('stage');
+var canvas = document.getElementById('gameCanvas');
+var fsBtn = document.getElementById('fsBtn');
+if (!stage || !canvas) return;
+var CW = parseInt(canvas.getAttribute('width'), 10) || 400;
+var CH = parseInt(canvas.getAttribute('height'), 10) || 600;
+
+function isFs() {
+  return document.fullscreenElement === stage ||
+         document.webkitFullscreenElement === stage ||
+         document.mozFullScreenElement === stage ||
+         document.msFullscreenElement === stage ||
+         stage.classList.contains('fake-full');
+}
+function fitStage() {
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var boxW, boxH;
+  if (isFs()) { boxW = vw; boxH = vh; }
+  else {
+    boxW = stage.parentElement ? stage.parentElement.clientWidth : vw;
+    var top = stage.getBoundingClientRect().top;
+    boxH = Math.max(280, vh - top - 16);
+  }
+  var s = Math.min(boxW / CW, boxH / CH);
+  var cw = Math.max(1, Math.floor(CW * s));
+  var ch = Math.max(1, Math.floor(CH * s));
+  canvas.style.width = cw + 'px';
+  canvas.style.height = ch + 'px';
+  if (isFs()) { stage.style.width = vw + 'px'; stage.style.height = vh + 'px'; }
+  else { stage.style.width = '100%'; stage.style.height = ch + 'px'; }
+}
+function requestFs(el) {
+  try {
+    if (el.requestFullscreen) return el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+    if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
+    if (el.msRequestFullscreen) return el.msRequestFullscreen();
+  } catch (e) { /* handled by caller */ }
+  return null;
+}
+function exitFs() {
+  try {
+    if (document.exitFullscreen && document.fullscreenElement) return document.exitFullscreen();
+    if (document.webkitExitFullscreen && document.webkitFullscreenElement) return document.webkitExitFullscreen();
+    if (document.mozCancelFullScreen && document.mozFullScreenElement) return document.mozCancelFullScreen();
+    if (document.msExitFullscreen && document.msFullscreenElement) return document.msExitFullscreen();
+  } catch (e) { /* ignore */ }
+  return null;
+}
+function hasNativeFs() {
+  return !!(stage.requestFullscreen || stage.webkitRequestFullscreen || stage.mozRequestFullScreen || stage.msRequestFullscreen);
+}
+function fakeFull() {
+  if (document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement) return;
+  stage.classList.add('fake-full');
+  document.body.style.overflow = 'hidden';
+  fitStage();
+  try { stage.scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
+}
+function unFake() {
+  stage.classList.remove('fake-full');
+  document.body.style.overflow = '';
+}
+function enterFull() {
+  if (isFs()) return;
+  if (hasNativeFs()) {
+    var p = requestFs(stage);
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { fakeFull(); });
+    } else {
+      setTimeout(function () { if (!isFs()) fakeFull(); }, 700);
+    }
+  } else {
+    fakeFull();
+  }
+}
+function leaveFull() {
+  if (stage.classList.contains('fake-full')) { unFake(); }
+  else { exitFs(); }
+  setTimeout(fitStage, 80);
+}
+function toggleFs() { if (isFs()) leaveFull(); else enterFull(); }
+function onFsChange() {
+  fitStage();
+  if (fsBtn) fsBtn.textContent = isFs() ? '\u2922' : '\u26F6';
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+document.addEventListener('mozfullscreenchange', onFsChange);
+document.addEventListener('MSFullscreenChange', onFsChange);
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', function () { setTimeout(fitStage, 150); });
+
+/* PLAY / START buttons are real user gestures: they also maximise the stage.
+   Any fullscreen failure falls back gracefully and never breaks the start flow. */
+['startBtn', 'restartBtn', 'restartBtnPause', 'restartBtnWin', 'resumeBtn'].forEach(function (id) {
+  var b = document.getElementById(id);
+  if (b) b.addEventListener('click', function () { enterFull(); });
+});
+if (fsBtn) fsBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFs(); });
+window.addEventListener('keydown', function (e) {
+  if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) toggleFs();
+});
+fitStage();
+setTimeout(fitStage, 300);
+})();
+</script>
+
+</body>
+</html>

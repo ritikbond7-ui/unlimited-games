@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Target Rush — Free 60-Second Target Game</title>
+<meta name="description" content="Target Rush is a free 60-second aim game. Tap glowing targets before they vanish. Smaller targets score more. Play free in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Target Rush — Free 60-Second Target Game">
+<meta property="og:description" content="60 seconds, endless glowing targets — tap them fast. Play free in your browser, no download, no signup.">
+<meta property="og:url" content="https://ev-rush-game.pages.dev/target.html">
+<meta property="og:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Target Rush — Free 60-Second Target Game">
+<meta name="twitter:description" content="60 seconds, endless glowing targets — tap them fast. Play free in your browser.">
+<meta name="twitter:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---------- Game Zone shared chrome ---------- */
+.site-header {
+  background: linear-gradient(180deg, rgba(14,23,48,0.88), rgba(7,11,22,0.55));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, rgba(34,230,240,0.8), transparent) 1;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45), 0 0 24px rgba(34,230,240,0.16);
+}
+.logo {
+  background: linear-gradient(92deg, #ffffff 5%, var(--cyan) 55%, #7dffc9 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+nav.main-nav a { transition: color 0.2s, text-shadow 0.2s; }
+.game-hero { text-align: center; margin: 6px 0 20px; }
+.game-hero h1 {
+  margin: 0; font-size: 2.4rem; font-weight: 800; letter-spacing: 4px;
+  background: linear-gradient(92deg, #ffc8dd 5%, #ff4d5e 50%, #ff9f2e 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255,77,94,0.45));
+}
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  max-width: 100%; margin: 0 auto 12px; padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(26,36,70,0.92), rgba(13,20,40,0.92));
+  border: 1px solid rgba(34,230,240,0.28); border-radius: 14px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.hud .score-box { text-align: left; }
+.hud .label { font-size: 0.68rem; color: var(--muted); letter-spacing: 3px; font-weight: 600; }
+.hud .value { font-size: 1.65rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(34,230,240,0.35); }
+.hud .value.best { color: var(--lime); text-shadow: 0 0 12px rgba(125,255,94,0.35); }
+.hud .value.time { color: #ffd12e; text-shadow: 0 0 12px rgba(255,209,46,0.35); }
+.hud .icon-btns { display: flex; gap: 10px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(34,230,240,0.35);
+  background: linear-gradient(180deg, #16203c, #0d1428); color: var(--text); font-size: 1.2rem; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.icon-btn:hover { border-color: var(--cyan); box-shadow: 0 0 14px rgba(34,230,240,0.35); transform: translateY(-1px); }
+.icon-btn:active { transform: translateY(1px) scale(0.96); }
+.icon-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.stage {
+  position: relative; max-width: none; width: 100%; margin: 0 auto;
+  border: 2px solid transparent; border-radius: 16px; overflow: hidden;
+  background:
+    linear-gradient(#0a0f1e, #0a0f1e) padding-box,
+    linear-gradient(160deg, #ff4d5e, rgba(255,77,94,0.15) 42%, #ffd12e) border-box;
+  box-shadow: 0 0 34px rgba(255,77,94,0.24), 0 14px 44px rgba(0,0,0,0.55);
+  animation: stageGlow 4.5s ease-in-out infinite;
+}
+@keyframes stageGlow {
+  0%, 100% { box-shadow: 0 0 26px rgba(255,77,94,0.20), 0 14px 44px rgba(0,0,0,0.55); }
+  50% { box-shadow: 0 0 46px rgba(255,77,94,0.38), 0 14px 44px rgba(0,0,0,0.55); }
+}
+@media (prefers-reduced-motion: reduce) { .stage { animation: none; } }
+#gameCanvas { display: block; margin: 0 auto; touch-action: none; cursor: crosshair; }
+.overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  background: rgba(5, 8, 18, 0.86); backdrop-filter: blur(2px);
+  padding: 24px; z-index: 5;
+}
+.overlay.hidden { display: none; }
+.overlay h2 {
+  margin: 0 0 10px; font-size: 2.2rem; letter-spacing: 4px; color: #ff4d5e;
+  text-shadow: 0 0 18px rgba(255,77,94,0.8);
+}
+.overlay p { color: var(--muted); margin: 6px 0 14px; line-height: 1.6; font-size: 0.95rem; }
+.big-score { font-size: 3rem; font-weight: 800; color: #fff; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.newbest {
+  color: var(--lime); font-weight: 800; letter-spacing: 2px; margin: 6px 0 2px;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse { 50% { opacity: 0.45; } }
+.overlay .row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+.btn {
+  background: linear-gradient(180deg, rgba(255,77,94,0.16), rgba(255,77,94,0.04));
+}
+.btn:hover { background: linear-gradient(180deg, rgba(255,77,94,0.28), rgba(255,77,94,0.08)); box-shadow: 0 0 26px rgba(255,77,94,0.55), 0 6px 18px rgba(0,0,0,0.5); }
+.btn:focus-visible { outline: 2px solid #ff4d5e; outline-offset: 3px; }
+.btn.pink { background: linear-gradient(180deg, rgba(255,46,166,0.18), rgba(255,46,166,0.04)); }
+.btn.pink:hover { box-shadow: 0 0 26px rgba(255,46,166,0.55), 0 6px 18px rgba(0,0,0,0.5); }
+.site-footer { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--line), transparent) 1; padding: 24px 18px 28px; }
+.site-footer nav { margin-bottom: 10px; }
+.site-footer nav a { padding: 4px 2px; }
+.controls-line { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 12px auto 0; max-width: 100%; }
+@media (max-width: 480px) {
+  .game-hero h1 { font-size: 1.7rem; letter-spacing: 3px; }
+  .hud { padding: 8px 12px; border-radius: 12px; }
+  .hud .value { font-size: 1.4rem; }
+  .overlay h2 { font-size: 1.7rem; }
+  .big-score { font-size: 2.4rem; }
+}
+
+/* ---- Responsive stage + fullscreen (Game Zone module) ---- */
+.stage:fullscreen, .stage:-webkit-full-screen, .stage:-moz-full-screen, .stage:-ms-fullscreen {
+  border-radius: 0 !important; max-width: none !important; width: 100vw !important; height: 100vh !important; margin: 0;
+}
+.stage.fake-full {
+  position: fixed; inset: 0; z-index: 9999;
+  width: 100vw !important; height: 100dvh !important;
+  max-width: none !important; border-radius: 0; margin: 0;
+}
+
+</style>
+<meta name="google-adsense-account" content="ca-pub-9282230786844335">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9282230786844335" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="logo" href="index.html"><span class="bolt">🎮</span> UNLIMITED GAMES</a>
+    <nav class="main-nav">
+      <a href="index.html" class="active">← All Games</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="game-hero">
+    <h1>🎯 TARGET RUSH</h1>
+  </div>
+
+  <div class="hud">
+    <div class="score-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="scoreVal">0</div>
+    </div>
+    <div class="score-box" style="text-align:center">
+      <div class="label">TIME</div>
+      <div class="value time" id="timeVal">60</div>
+    </div>
+    <div class="icon-btns">
+      <button class="icon-btn" id="muteBtn" title="Mute / unmute sound (M)" aria-label="Mute sound">🔊</button>
+      <button class="icon-btn" id="pauseBtn" title="Pause / resume (P)" aria-label="Pause game">⏸</button>
+      <button class="icon-btn" id="fsBtn" title="Fullscreen (F)" aria-label="Toggle fullscreen">⛶</button>
+    </div>
+    <div class="score-box" style="text-align:right">
+      <div class="label">BEST</div>
+      <div class="value best" id="bestVal">0</div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <div class="overlay" id="startScreen">
+      <h2>TARGET RUSH</h2>
+      <button class="btn" id="startBtn">START</button>
+      <p class="meta" style="margin-top:14px">Press Enter to start</p>
+    </div>
+
+    <div class="overlay hidden" id="pauseScreen">
+      <h2>PAUSED</h2>
+      <div class="row">
+        <button class="btn" id="resumeBtn">RESUME</button>
+        <button class="btn pink" id="restartBtnPause">RESTART</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="gameOverScreen">
+      <h2>TIME'S UP!</h2>
+      <div class="newbest hidden" id="newBestTag">★ NEW BEST ★</div>
+      <div class="label" style="color:var(--muted);letter-spacing:2px;font-size:0.75rem">FINAL SCORE</div>
+      <div class="big-score" id="finalScore">0</div>
+      <p id="bestLine">Best: 0</p>
+      <div class="row">
+        <button class="btn" id="restartBtn">RUSH AGAIN</button>
+      </div>
+      <p class="meta" style="margin-top:12px">Press Enter to restart</p>
+    </div>
+  </div>
+
+  <p class="controls-line">Tap the targets, smaller scores more</p>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <p>© 2026 Unlimited Games · Made with <span class="heart">⚡</span> by Ritik Raj · Play free in your browser</p>
+</footer>
+
+<script>
+/* ============================================================
+   TARGET RUSH — original 60-second aim game.
+   Tap glowing targets before they vanish. Smaller = more points.
+   Misses cost nothing. Canvas only. Plain ES5-ish JS.
+   ============================================================ */
+(function () {
+'use strict';
+
+/* ---------------- Canvas & constants ---------------- */
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var W = canvas.width;    // 400
+var H = canvas.height;   // 600
+
+var ROUND = 60;          // seconds
+var MAX_TARGETS = 5;
+
+var ST = { START: 0, PLAY: 1, PAUSE: 2, OVER: 3 };
+var state = ST.START;
+
+/* ---------------- DOM refs ---------------- */
+var scoreVal = document.getElementById('scoreVal');
+var timeVal = document.getElementById('timeVal');
+var bestVal = document.getElementById('bestVal');
+var finalScoreEl = document.getElementById('finalScore');
+var bestLine = document.getElementById('bestLine');
+var newBestTag = document.getElementById('newBestTag');
+var startScreen = document.getElementById('startScreen');
+var pauseScreen = document.getElementById('pauseScreen');
+var gameOverScreen = document.getElementById('gameOverScreen');
+var startBtn = document.getElementById('startBtn');
+var resumeBtn = document.getElementById('resumeBtn');
+var restartBtn = document.getElementById('restartBtn');
+var restartBtnPause = document.getElementById('restartBtnPause');
+var pauseBtn = document.getElementById('pauseBtn');
+var muteBtn = document.getElementById('muteBtn');
+
+/* ---------------- Best score (localStorage, guarded) ---------------- */
+var best = 0;
+try { best = parseInt(localStorage.getItem('targetrush_best') || '0', 10) || 0; } catch (e) { best = 0; }
+function saveBest() {
+  try { localStorage.setItem('targetrush_best', String(best)); } catch (e) { /* storage unavailable */ }
+}
+bestVal.textContent = best;
+
+/* ---------------- Tiny WebAudio SFX ---------------- */
+var audioCtx = null;
+var muted = false;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+}
+function beep(freq, dur, type, vol) {
+  if (muted) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  try {
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch (e) { /* ignore */ }
+}
+function sfxHit(big) { beep(big ? 1320 : 990, 0.08, 'square', 0.05); }
+function sfxEnd() { beep(660, 0.15, 'sine', 0.07); setTimeout(function () { beep(440, 0.2, 'sine', 0.07); }, 140); }
+function sfxClick() { beep(520, 0.06, 'triangle', 0.05); }
+
+/* ---------------- Game state ---------------- */
+var targets, particles, floaters, score, timeLeft, spawnTimer, elapsed;
+
+var TARGET_COLORS = ['#ff4d5e', '#ffd12e', '#22e6f0', '#7dff5e', '#ff2ea6', '#b04dff'];
+
+function resetGame() {
+  targets = [];
+  particles = [];
+  floaters = [];
+  score = 0;
+  timeLeft = ROUND;
+  spawnTimer = 0;
+  elapsed = 0;
+  updateHUD();
+}
+function updateHUD() {
+  scoreVal.textContent = score;
+  timeVal.textContent = Math.ceil(timeLeft);
+  bestVal.textContent = best;
+}
+function showOverlay(el) {
+  startScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  if (el) el.classList.remove('hidden');
+}
+function spawnTarget() {
+  var r = 14 + Math.random() * 22; // 14..36
+  var margin = r + 14;
+  targets.push({
+    x: margin + Math.random() * (W - 2 * margin),
+    y: margin + 30 + Math.random() * (H - 2 * margin - 60),
+    r: r,
+    life: 1.7 + Math.random() * 0.9,
+    maxLife: 2.6,
+    color: TARGET_COLORS[(Math.random() * TARGET_COLORS.length) | 0],
+    born: elapsed
+  });
+}
+
+/* ---------------- Input ---------------- */
+function canvasPos(clientX, clientY) {
+  var r = canvas.getBoundingClientRect();
+  return {
+    x: (clientX - r.left) * (W / r.width),
+    y: (clientY - r.top) * (H / r.height)
+  };
+}
+function tap(px, py) {
+  if (state !== ST.PLAY) return;
+  // topmost target first
+  for (var i = targets.length - 1; i >= 0; i--) {
+    var t = targets[i];
+    var dx = px - t.x, dy = py - t.y;
+    if (dx * dx + dy * dy <= t.r * t.r) {
+      var pts = Math.round(36 * (36 / t.r)); // smaller = more: 36..~93
+      score += pts;
+      sfxHit(t.r < 20);
+      addFloater(t.x, t.y - t.r, '+' + pts, t.color);
+      burst(t.x, t.y, t.color, 14);
+      targets.splice(i, 1);
+      updateHUD();
+      return;
+    }
+  }
+  // misses cost nothing
+}
+canvas.addEventListener('mousedown', function (e) {
+  var p = canvasPos(e.clientX, e.clientY);
+  tap(p.x, p.y);
+  e.preventDefault();
+});
+canvas.addEventListener('touchstart', function (e) {
+  var t = e.touches[0];
+  var p = canvasPos(t.clientX, t.clientY);
+  tap(p.x, p.y);
+  e.preventDefault();
+}, { passive: false });
+window.addEventListener('keydown', function (e) {
+  var k = e.key;
+  if (k === 'p' || k === 'P') { togglePause(); }
+  else if (k === 'm' || k === 'M') { toggleMute(); }
+  else if (k === 'Enter' || k === ' ') {
+    if (state === ST.START || state === ST.OVER) { startGame(); e.preventDefault(); }
+  }
+});
+
+/* ---------------- Buttons & overlays ---------------- */
+function startGame() {
+  ensureAudio(); sfxClick();
+  resetGame();
+  state = ST.PLAY;
+  showOverlay(null);
+}
+function togglePause() {
+  if (state === ST.PLAY) {
+    state = ST.PAUSE; sfxClick(); showOverlay(pauseScreen);
+  } else if (state === ST.PAUSE) {
+    state = ST.PLAY; sfxClick(); showOverlay(null);
+  }
+}
+function toggleMute() {
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+}
+function endRound() {
+  state = ST.OVER;
+  sfxEnd();
+  var isBest = score > best;
+  if (isBest) { best = score; saveBest(); }
+  finalScoreEl.textContent = score;
+  bestLine.textContent = 'Best: ' + best;
+  newBestTag.classList.toggle('hidden', !isBest);
+  updateHUD();
+  showOverlay(gameOverScreen);
+}
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+restartBtnPause.addEventListener('click', startGame);
+resumeBtn.addEventListener('click', togglePause);
+pauseBtn.addEventListener('click', function () { if (state === ST.PLAY || state === ST.PAUSE) togglePause(); });
+muteBtn.addEventListener('click', toggleMute);
+
+/* ---------------- Particles / floaters ---------------- */
+function burst(x, y, color, n) {
+  for (var i = 0; i < n; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 60 + Math.random() * 200;
+    particles.push({
+      x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      life: 0.5, max: 0.5, color: color, size: 2 + Math.random() * 3
+    });
+  }
+}
+function addFloater(x, y, txt, color) {
+  floaters.push({ x: x, y: y, txt: txt, color: color, life: 0.9 });
+}
+
+/* ---------------- Update ---------------- */
+function update(dt) {
+  elapsed += dt;
+  timeLeft -= dt;
+  if (timeLeft <= 0) {
+    timeLeft = 0;
+    endRound();
+    return;
+  }
+  // spawn pacing quickens as the round progresses
+  spawnTimer -= dt;
+  if (spawnTimer <= 0 && targets.length < MAX_TARGETS) {
+    spawnTarget();
+    var pace = Math.max(0.28, 0.7 - elapsed * 0.008);
+    spawnTimer = pace * (0.7 + Math.random() * 0.6);
+  }
+  for (var i = targets.length - 1; i >= 0; i--) {
+    var t = targets[i];
+    t.life -= dt;
+    if (t.life <= 0) targets.splice(i, 1);
+  }
+  for (var p = particles.length - 1; p >= 0; p--) {
+    var pt = particles[p];
+    pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vy += 200 * dt;
+    pt.life -= dt;
+    if (pt.life <= 0) particles.splice(p, 1);
+  }
+  for (var f = floaters.length - 1; f >= 0; f--) {
+    var ft = floaters[f];
+    ft.y -= 44 * dt; ft.life -= dt;
+    if (ft.life <= 0) floaters.splice(f, 1);
+  }
+  updateHUD();
+}
+
+/* ---------------- Drawing ---------------- */
+function render() {
+  var g = ctx.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, W);
+  g.addColorStop(0, '#100a1c'); g.addColorStop(1, '#070b16');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // targets: pulsing bullseyes with life ring
+  for (var i = 0; i < targets.length; i++) {
+    var t = targets[i];
+    var pulse = 1 + Math.sin(elapsed * 10 + t.born * 7) * 0.07;
+    var r = t.r * pulse;
+    ctx.save();
+    ctx.shadowColor = t.color; ctx.shadowBlur = 18;
+    // outer ring
+    ctx.strokeStyle = t.color; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.arc(t.x, t.y, r, 0, 6.3); ctx.stroke();
+    // middle ring
+    ctx.lineWidth = 3;
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.arc(t.x, t.y, r * 0.62, 0, 6.3); ctx.stroke();
+    // core
+    ctx.globalAlpha = 1;
+    var cg = ctx.createRadialGradient(t.x - r * 0.2, t.y - r * 0.2, 1, t.x, t.y, r * 0.34);
+    cg.addColorStop(0, '#ffffff'); cg.addColorStop(1, t.color);
+    ctx.fillStyle = cg;
+    ctx.beginPath(); ctx.arc(t.x, t.y, r * 0.34, 0, 6.3); ctx.fill();
+    ctx.shadowBlur = 0;
+    // life ring (shrinks as it fades)
+    var lr = (t.life / t.maxLife);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(t.x, t.y, r + 8, -1.57, -1.57 + 6.283 * lr); ctx.stroke();
+    ctx.restore();
+  }
+
+  // particles
+  for (var p = 0; p < particles.length; p++) {
+    var pt = particles[p];
+    ctx.globalAlpha = Math.max(0, pt.life / pt.max);
+    ctx.fillStyle = pt.color;
+    ctx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
+  }
+  ctx.globalAlpha = 1;
+
+  // floating scores
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 17px "Segoe UI", Arial, sans-serif';
+  for (var f = 0; f < floaters.length; f++) {
+    var ft = floaters[f];
+    ctx.globalAlpha = Math.max(0, Math.min(1, ft.life * 1.6));
+    ctx.fillStyle = ft.color;
+    ctx.shadowColor = ft.color; ctx.shadowBlur = 8;
+    ctx.fillText(ft.txt, ft.x, ft.y);
+  }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+  // time bar
+  var tw = W * (timeLeft / ROUND);
+  ctx.fillStyle = timeLeft < 10 ? '#ff4d5e' : '#ffd12e';
+  ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8;
+  ctx.fillRect(0, 0, tw, 5);
+  ctx.shadowBlur = 0;
+}
+
+/* ---------------- Main loop ---------------- */
+var lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = (t - lastT) / 1000;
+  lastT = t;
+  if (!(dt > 0)) return;
+  if (dt > 0.05) dt = 0.05;
+  if (state === ST.PLAY) update(dt);
+  render();
+}
+
+/* ---------------- Init ---------------- */
+resetGame();
+showOverlay(startScreen);
+requestAnimationFrame(function (t) { lastT = t; requestAnimationFrame(frame); });
+
+})();
+</script>
+<script>
+/* === Game Zone: responsive stage + fullscreen-on-play (shared module) === */
+(function () {
+'use strict';
+var stage = document.getElementById('stage');
+var canvas = document.getElementById('gameCanvas');
+var fsBtn = document.getElementById('fsBtn');
+if (!stage || !canvas) return;
+var CW = parseInt(canvas.getAttribute('width'), 10) || 400;
+var CH = parseInt(canvas.getAttribute('height'), 10) || 600;
+
+function isFs() {
+  return document.fullscreenElement === stage ||
+         document.webkitFullscreenElement === stage ||
+         document.mozFullScreenElement === stage ||
+         document.msFullscreenElement === stage ||
+         stage.classList.contains('fake-full');
+}
+function fitStage() {
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var boxW, boxH;
+  if (isFs()) { boxW = vw; boxH = vh; }
+  else {
+    boxW = stage.parentElement ? stage.parentElement.clientWidth : vw;
+    var top = stage.getBoundingClientRect().top;
+    boxH = Math.max(280, vh - top - 16);
+  }
+  var s = Math.min(boxW / CW, boxH / CH);
+  var cw = Math.max(1, Math.floor(CW * s));
+  var ch = Math.max(1, Math.floor(CH * s));
+  canvas.style.width = cw + 'px';
+  canvas.style.height = ch + 'px';
+  if (isFs()) { stage.style.width = vw + 'px'; stage.style.height = vh + 'px'; }
+  else { stage.style.width = '100%'; stage.style.height = ch + 'px'; }
+}
+function requestFs(el) {
+  try {
+    if (el.requestFullscreen) return el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+    if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
+    if (el.msRequestFullscreen) return el.msRequestFullscreen();
+  } catch (e) { /* handled by caller */ }
+  return null;
+}
+function exitFs() {
+  try {
+    if (document.exitFullscreen && document.fullscreenElement) return document.exitFullscreen();
+    if (document.webkitExitFullscreen && document.webkitFullscreenElement) return document.webkitExitFullscreen();
+    if (document.mozCancelFullScreen && document.mozFullScreenElement) return document.mozCancelFullScreen();
+    if (document.msExitFullscreen && document.msFullscreenElement) return document.msExitFullscreen();
+  } catch (e) { /* ignore */ }
+  return null;
+}
+function hasNativeFs() {
+  return !!(stage.requestFullscreen || stage.webkitRequestFullscreen || stage.mozRequestFullScreen || stage.msRequestFullscreen);
+}
+function fakeFull() {
+  if (document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement) return;
+  stage.classList.add('fake-full');
+  document.body.style.overflow = 'hidden';
+  fitStage();
+  try { stage.scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
+}
+function unFake() {
+  stage.classList.remove('fake-full');
+  document.body.style.overflow = '';
+}
+function enterFull() {
+  if (isFs()) return;
+  if (hasNativeFs()) {
+    var p = requestFs(stage);
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { fakeFull(); });
+    } else {
+      setTimeout(function () { if (!isFs()) fakeFull(); }, 700);
+    }
+  } else {
+    fakeFull();
+  }
+}
+function leaveFull() {
+  if (stage.classList.contains('fake-full')) { unFake(); }
+  else { exitFs(); }
+  setTimeout(fitStage, 80);
+}
+function toggleFs() { if (isFs()) leaveFull(); else enterFull(); }
+function onFsChange() {
+  fitStage();
+  if (fsBtn) fsBtn.textContent = isFs() ? '\u2922' : '\u26F6';
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+document.addEventListener('mozfullscreenchange', onFsChange);
+document.addEventListener('MSFullscreenChange', onFsChange);
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', function () { setTimeout(fitStage, 150); });
+
+/* PLAY / START buttons are real user gestures: they also maximise the stage.
+   Any fullscreen failure falls back gracefully and never breaks the start flow. */
+['startBtn', 'restartBtn', 'restartBtnPause', 'restartBtnWin', 'resumeBtn'].forEach(function (id) {
+  var b = document.getElementById(id);
+  if (b) b.addEventListener('click', function () { enterFull(); });
+});
+if (fsBtn) fsBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFs(); });
+window.addEventListener('keydown', function (e) {
+  if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) toggleFs();
+});
+fitStage();
+setTimeout(fitStage, 300);
+})();
+</script>
+
+</body>
+</html>

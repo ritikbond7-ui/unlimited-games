@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sky Dash — Free One-Tap Flying Game</title>
+<meta name="description" content="Sky Dash is a free one-tap flying game. Guide the glowing orb through neon pillar gaps. Tap to flap, chase your best score.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sky Dash — Free One-Tap Flying Game">
+<meta property="og:description" content="Tap to flap a glowing orb through neon gaps. Play free in your browser — no download, no signup.">
+<meta property="og:url" content="https://ev-rush-game.pages.dev/skyflap.html">
+<meta property="og:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sky Dash — Free One-Tap Flying Game">
+<meta name="twitter:description" content="Tap to flap a glowing orb through neon gaps. Play free in your browser.">
+<meta name="twitter:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---------- Game Zone shared chrome ---------- */
+.site-header {
+  background: linear-gradient(180deg, rgba(14,23,48,0.88), rgba(7,11,22,0.55));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, rgba(34,230,240,0.8), transparent) 1;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45), 0 0 24px rgba(34,230,240,0.16);
+}
+.logo {
+  background: linear-gradient(92deg, #ffffff 5%, var(--cyan) 55%, #7dffc9 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+nav.main-nav a { transition: color 0.2s, text-shadow 0.2s; }
+.game-hero { text-align: center; margin: 6px 0 20px; }
+.game-hero h1 {
+  margin: 0; font-size: 2.4rem; font-weight: 800; letter-spacing: 4px;
+  background: linear-gradient(92deg, #ffd1f0 5%, var(--magenta) 50%, #b04dff 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255,46,166,0.45));
+}
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  max-width: 100%; margin: 0 auto 12px; padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(26,36,70,0.92), rgba(13,20,40,0.92));
+  border: 1px solid rgba(34,230,240,0.28); border-radius: 14px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.hud .score-box { text-align: left; }
+.hud .label { font-size: 0.68rem; color: var(--muted); letter-spacing: 3px; font-weight: 600; }
+.hud .value { font-size: 1.65rem; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(34,230,240,0.35); }
+.hud .value.best { color: var(--lime); text-shadow: 0 0 12px rgba(125,255,94,0.35); }
+.hud .icon-btns { display: flex; gap: 10px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(34,230,240,0.35);
+  background: linear-gradient(180deg, #16203c, #0d1428); color: var(--text); font-size: 1.2rem; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.icon-btn:hover { border-color: var(--cyan); box-shadow: 0 0 14px rgba(34,230,240,0.35); transform: translateY(-1px); }
+.icon-btn:active { transform: translateY(1px) scale(0.96); }
+.icon-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.stage {
+  position: relative; max-width: none; width: 100%; margin: 0 auto;
+  border: 2px solid transparent; border-radius: 16px; overflow: hidden;
+  background:
+    linear-gradient(#0a0f1e, #0a0f1e) padding-box,
+    linear-gradient(160deg, var(--magenta), rgba(255,46,166,0.15) 42%, var(--cyan)) border-box;
+  box-shadow: 0 0 34px rgba(255,46,166,0.24), 0 14px 44px rgba(0,0,0,0.55);
+  animation: stageGlow 4.5s ease-in-out infinite;
+}
+@keyframes stageGlow {
+  0%, 100% { box-shadow: 0 0 26px rgba(255,46,166,0.20), 0 14px 44px rgba(0,0,0,0.55); }
+  50% { box-shadow: 0 0 46px rgba(255,46,166,0.38), 0 14px 44px rgba(0,0,0,0.55); }
+}
+@media (prefers-reduced-motion: reduce) { .stage { animation: none; } }
+#gameCanvas { display: block; margin: 0 auto; touch-action: none; cursor: pointer; }
+.overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  background: rgba(5, 8, 18, 0.86); backdrop-filter: blur(2px);
+  padding: 24px; z-index: 5;
+}
+.overlay.hidden { display: none; }
+.overlay h2 {
+  margin: 0 0 10px; font-size: 2.2rem; letter-spacing: 4px; color: var(--magenta);
+  text-shadow: 0 0 18px rgba(255,46,166,0.8);
+}
+.overlay h2.crash { color: var(--magenta); text-shadow: 0 0 18px rgba(255,46,166,0.8); }
+.overlay p { color: var(--muted); margin: 6px 0 14px; line-height: 1.6; font-size: 0.95rem; }
+.big-score { font-size: 3rem; font-weight: 800; color: #fff; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.newbest {
+  color: var(--lime); font-weight: 800; letter-spacing: 2px; margin: 6px 0 2px;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse { 50% { opacity: 0.45; } }
+.overlay .row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+.btn {
+  background: linear-gradient(180deg, rgba(255,46,166,0.16), rgba(255,46,166,0.04));
+}
+.btn:hover { background: linear-gradient(180deg, rgba(255,46,166,0.28), rgba(255,46,166,0.08)); box-shadow: 0 0 26px rgba(255,46,166,0.55), 0 6px 18px rgba(0,0,0,0.5); }
+.btn:focus-visible { outline: 2px solid var(--magenta); outline-offset: 3px; }
+.btn.pink { background: linear-gradient(180deg, rgba(255,46,166,0.18), rgba(255,46,166,0.04)); }
+.btn.pink:hover { box-shadow: 0 0 26px rgba(255,46,166,0.55), 0 6px 18px rgba(0,0,0,0.5); }
+.site-footer { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--line), transparent) 1; padding: 24px 18px 28px; }
+.site-footer nav { margin-bottom: 10px; }
+.site-footer nav a { padding: 4px 2px; }
+.controls-line { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 12px auto 0; max-width: 100%; }
+@media (max-width: 480px) {
+  .game-hero h1 { font-size: 1.7rem; letter-spacing: 3px; }
+  .hud { padding: 8px 12px; border-radius: 12px; }
+  .hud .value { font-size: 1.4rem; }
+  .overlay h2 { font-size: 1.7rem; }
+  .big-score { font-size: 2.4rem; }
+}
+
+/* ---- Responsive stage + fullscreen (Game Zone module) ---- */
+.stage:fullscreen, .stage:-webkit-full-screen, .stage:-moz-full-screen, .stage:-ms-fullscreen {
+  border-radius: 0 !important; max-width: none !important; width: 100vw !important; height: 100vh !important; margin: 0;
+}
+.stage.fake-full {
+  position: fixed; inset: 0; z-index: 9999;
+  width: 100vw !important; height: 100dvh !important;
+  max-width: none !important; border-radius: 0; margin: 0;
+}
+
+</style>
+<meta name="google-adsense-account" content="ca-pub-9282230786844335">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9282230786844335" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="logo" href="index.html"><span class="bolt">🎮</span> UNLIMITED GAMES</a>
+    <nav class="main-nav">
+      <a href="index.html" class="active">← All Games</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="game-hero">
+    <h1>🌀 SKY DASH</h1>
+  </div>
+
+  <div class="hud">
+    <div class="score-box">
+      <div class="label">SCORE</div>
+      <div class="value" id="scoreVal">0</div>
+    </div>
+    <div class="icon-btns">
+      <button class="icon-btn" id="muteBtn" title="Mute / unmute sound (M)" aria-label="Mute sound">🔊</button>
+      <button class="icon-btn" id="pauseBtn" title="Pause / resume (P)" aria-label="Pause game">⏸</button>
+      <button class="icon-btn" id="fsBtn" title="Fullscreen (F)" aria-label="Toggle fullscreen">⛶</button>
+    </div>
+    <div class="score-box" style="text-align:right">
+      <div class="label">BEST</div>
+      <div class="value best" id="bestVal">0</div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <div class="overlay" id="startScreen">
+      <h2>SKY DASH</h2>
+      <button class="btn" id="startBtn">FLY</button>
+      <p class="meta" style="margin-top:14px">Press Enter to start</p>
+    </div>
+
+    <div class="overlay hidden" id="pauseScreen">
+      <h2>PAUSED</h2>
+      <div class="row">
+        <button class="btn" id="resumeBtn">RESUME</button>
+        <button class="btn pink" id="restartBtnPause">RESTART</button>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="gameOverScreen">
+      <h2 class="crash">CRASHED</h2>
+      <div class="newbest hidden" id="newBestTag">★ NEW BEST ★</div>
+      <div class="label" style="color:var(--muted);letter-spacing:2px;font-size:0.75rem">FINAL SCORE</div>
+      <div class="big-score" id="finalScore">0</div>
+      <p id="bestLine">Best: 0</p>
+      <div class="row">
+        <button class="btn" id="restartBtn">FLY AGAIN</button>
+      </div>
+      <p class="meta" style="margin-top:12px">Press Enter to restart</p>
+    </div>
+  </div>
+
+  <p class="controls-line">Tap, click, or space to flap</p>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <p>© 2026 Unlimited Games · Made with <span class="heart">⚡</span> by Ritik Raj · Play free in your browser</p>
+</footer>
+
+<script>
+/* ============================================================
+   SKY DASH — original one-tap flying game.
+   Guide a glowing orb through neon pillar gaps. Tap to flap.
+   Canvas only. No external assets. Plain ES5-ish JS.
+   ============================================================ */
+(function () {
+'use strict';
+
+/* ---------------- Canvas & constants ---------------- */
+var canvas = document.getElementById('gameCanvas');
+var ctx = canvas.getContext('2d');
+var W = canvas.width;    // 400
+var H = canvas.height;   // 600
+
+var ORB_X = 110;
+var ORB_R = 16;
+var GRAV = 1500;
+var FLAP = -440;
+
+var ST = { START: 0, PLAY: 1, PAUSE: 2, OVER: 3 };
+var state = ST.START;
+
+/* ---------------- DOM refs ---------------- */
+var scoreVal = document.getElementById('scoreVal');
+var bestVal = document.getElementById('bestVal');
+var finalScoreEl = document.getElementById('finalScore');
+var bestLine = document.getElementById('bestLine');
+var newBestTag = document.getElementById('newBestTag');
+var startScreen = document.getElementById('startScreen');
+var pauseScreen = document.getElementById('pauseScreen');
+var gameOverScreen = document.getElementById('gameOverScreen');
+var startBtn = document.getElementById('startBtn');
+var resumeBtn = document.getElementById('resumeBtn');
+var restartBtn = document.getElementById('restartBtn');
+var restartBtnPause = document.getElementById('restartBtnPause');
+var pauseBtn = document.getElementById('pauseBtn');
+var muteBtn = document.getElementById('muteBtn');
+
+/* ---------------- Best score (localStorage, guarded) ---------------- */
+var best = 0;
+try { best = parseInt(localStorage.getItem('skydash_best') || '0', 10) || 0; } catch (e) { best = 0; }
+function saveBest() {
+  try { localStorage.setItem('skydash_best', String(best)); } catch (e) { /* storage unavailable */ }
+}
+bestVal.textContent = best;
+
+/* ---------------- Tiny WebAudio SFX ---------------- */
+var audioCtx = null;
+var muted = false;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+}
+function beep(freq, dur, type, vol) {
+  if (muted) return;
+  ensureAudio();
+  if (!audioCtx) return;
+  try {
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch (e) { /* ignore */ }
+}
+function sfxFlap() { beep(340, 0.09, 'triangle', 0.07); }
+function sfxScore() { beep(990, 0.08, 'sine', 0.06); }
+function sfxDie() { beep(200, 0.35, 'sawtooth', 0.09); }
+function sfxClick() { beep(520, 0.06, 'triangle', 0.05); }
+
+/* ---------------- Game state ---------------- */
+var orbY, orbV, orbRot, pillars, spawnTimer, score, trail, stars, flashT;
+
+function pillarGap() { return Math.max(150, 190 - score * 1.2); }
+function pillarSpeed() { return Math.min(340, 190 + score * 4); }
+function spawnInterval() { return Math.max(1.05, 1.55 - score * 0.012); }
+
+function resetGame() {
+  orbY = H * 0.45; orbV = 0; orbRot = 0;
+  pillars = [];
+  spawnTimer = 1.2;
+  score = 0;
+  trail = [];
+  stars = [];
+  for (var i = 0; i < 70; i++) {
+    stars.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 2 + 0.5, tw: Math.random() * 6.28 });
+  }
+  flashT = 0;
+  updateHUD();
+}
+function updateHUD() {
+  scoreVal.textContent = score;
+  bestVal.textContent = best;
+}
+function showOverlay(el) {
+  startScreen.classList.add('hidden');
+  pauseScreen.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+  if (el) el.classList.remove('hidden');
+}
+function spawnPillar() {
+  var gap = pillarGap();
+  var margin = 70;
+  var gapY = margin + gap / 2 + Math.random() * (H - 2 * margin - gap);
+  pillars.push({
+    x: W + 20, w: 74, gapY: gapY, gap: gap,
+    passed: false,
+    hue: (Math.random() * 60 + 280) | 0 // purple-pink range
+  });
+}
+
+/* ---------------- Input ---------------- */
+function flap() {
+  ensureAudio();
+  if (state === ST.START) { startGame(); return; }
+  if (state === ST.OVER) { return; }
+  if (state !== ST.PLAY) return;
+  orbV = FLAP;
+  sfxFlap();
+}
+window.addEventListener('keydown', function (e) {
+  var k = e.key;
+  if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W') {
+    if (state === ST.PLAY || state === ST.START) flap();
+    e.preventDefault();
+  }
+  else if (k === 'Enter') {
+    if (state === ST.START || state === ST.OVER) startGame();
+  }
+  else if (k === 'p' || k === 'P') togglePause();
+  else if (k === 'm' || k === 'M') toggleMute();
+});
+canvas.addEventListener('mousedown', function (e) { flap(); e.preventDefault(); });
+canvas.addEventListener('touchstart', function (e) { flap(); e.preventDefault(); }, { passive: false });
+
+/* ---------------- Buttons & overlays ---------------- */
+function startGame() {
+  ensureAudio(); sfxClick();
+  resetGame();
+  state = ST.PLAY;
+  showOverlay(null);
+}
+function togglePause() {
+  if (state === ST.PLAY) {
+    state = ST.PAUSE; sfxClick(); showOverlay(pauseScreen);
+  } else if (state === ST.PAUSE) {
+    state = ST.PLAY; sfxClick(); showOverlay(null);
+  }
+}
+function toggleMute() {
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+}
+function gameOver() {
+  state = ST.OVER;
+  sfxDie();
+  flashT = 0.45;
+  var isBest = score > best;
+  if (isBest) { best = score; saveBest(); }
+  finalScoreEl.textContent = score;
+  bestLine.textContent = 'Best: ' + best;
+  newBestTag.classList.toggle('hidden', !isBest);
+  updateHUD();
+  showOverlay(gameOverScreen);
+}
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+restartBtnPause.addEventListener('click', startGame);
+resumeBtn.addEventListener('click', togglePause);
+pauseBtn.addEventListener('click', function () { if (state === ST.PLAY || state === ST.PAUSE) togglePause(); });
+muteBtn.addEventListener('click', toggleMute);
+
+/* ---------------- Update ---------------- */
+function update(dt) {
+  // orb physics
+  orbV += GRAV * dt;
+  if (orbV > 900) orbV = 900;
+  orbY += orbV * dt;
+  orbRot += (Math.max(-0.5, Math.min(0.6, orbV / 900)) - orbRot) * Math.min(1, dt * 12);
+
+  // trail
+  trail.push({ x: ORB_X - ORB_R, y: orbY, life: 0.5, max: 0.5 });
+  if (trail.length > 26) trail.shift();
+  for (var i = trail.length - 1; i >= 0; i--) {
+    trail[i].life -= dt;
+    if (trail[i].life <= 0) trail.splice(i, 1);
+  }
+
+  // pillars
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnPillar();
+    spawnTimer = spawnInterval();
+  }
+  var spd = pillarSpeed();
+  for (var p = pillars.length - 1; p >= 0; p--) {
+    var pl = pillars[p];
+    pl.x -= spd * dt;
+    if (!pl.passed && pl.x + pl.w < ORB_X - ORB_R) {
+      pl.passed = true;
+      score++;
+      sfxScore();
+      updateHUD();
+    }
+    if (pl.x + pl.w < -40) pillars.splice(p, 1);
+  }
+
+  // collisions: ceiling, floor, pillars
+  if (orbY - ORB_R < 0 || orbY + ORB_R > H) { gameOver(); return; }
+  for (var q = 0; q < pillars.length; q++) {
+    var pl2 = pillars[q];
+    if (ORB_X + ORB_R > pl2.x && ORB_X - ORB_R < pl2.x + pl2.w) {
+      var topH = pl2.gapY - pl2.gap / 2;
+      var botY = pl2.gapY + pl2.gap / 2;
+      if (orbY - ORB_R < topH || orbY + ORB_R > botY) { gameOver(); return; }
+    }
+  }
+
+  // stars drift
+  for (var s = 0; s < stars.length; s++) {
+    stars[s].x -= 26 * dt;
+    stars[s].tw += dt * 3;
+    if (stars[s].x < 0) { stars[s].x = W; stars[s].y = Math.random() * H; }
+  }
+  if (flashT > 0) flashT -= dt;
+}
+
+/* ---------------- Drawing ---------------- */
+function render() {
+  // night sky
+  var g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0a0e24'); g.addColorStop(0.6, '#0d1330'); g.addColorStop(1, '#120a24');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // stars
+  for (var i = 0; i < stars.length; i++) {
+    var st = stars[i];
+    ctx.globalAlpha = 0.4 + Math.sin(st.tw) * 0.3;
+    ctx.fillStyle = '#cfe6ff';
+    ctx.fillRect(st.x, st.y, st.s, st.s);
+  }
+  ctx.globalAlpha = 1;
+
+  // pillars
+  for (var p = 0; p < pillars.length; p++) {
+    var pl = pillars[p];
+    var topH = pl.gapY - pl.gap / 2;
+    var botY = pl.gapY + pl.gap / 2;
+    drawPillar(pl, pl.x, 0, pl.w, topH, true);
+    drawPillar(pl, pl.x, botY, pl.w, H - botY, false);
+  }
+
+  // trail
+  for (var t = 0; t < trail.length; t++) {
+    var tr = trail[t];
+    ctx.globalAlpha = Math.max(0, tr.life / tr.max) * 0.6;
+    ctx.fillStyle = '#ff2ea6';
+    var r = ORB_R * 0.7 * (tr.life / tr.max);
+    ctx.beginPath(); ctx.arc(tr.x, tr.y, r, 0, 6.3); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // orb: glowing energy sphere with rotating ring
+  ctx.save();
+  ctx.translate(ORB_X, orbY);
+  ctx.rotate(orbRot);
+  ctx.shadowColor = '#ff2ea6'; ctx.shadowBlur = 24;
+  var og = ctx.createRadialGradient(-4, -4, 2, 0, 0, ORB_R);
+  og.addColorStop(0, '#ffffff'); og.addColorStop(0.4, '#ffd1f0'); og.addColorStop(1, '#ff2ea6');
+  ctx.fillStyle = og;
+  ctx.beginPath(); ctx.arc(0, 0, ORB_R, 0, 6.3); ctx.fill();
+  ctx.shadowBlur = 0;
+  // orbit ring
+  ctx.strokeStyle = 'rgba(34,230,240,0.9)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.ellipse(0, 0, ORB_R + 7, ORB_R * 0.55 + 3, 0.5, 0, 6.3); ctx.stroke();
+  // core spark
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-4, -4, 4.5, 0, 6.3); ctx.fill();
+  ctx.restore();
+
+  // crash flash
+  if (flashT > 0) {
+    ctx.fillStyle = 'rgba(255,46,166,' + (flashT * 0.9).toFixed(2) + ')';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+function drawPillar(pl, x, y, w, h, isTop) {
+  if (h <= 0) return;
+  ctx.save();
+  var col = 'hsl(' + pl.hue + ', 90%, 60%)';
+  ctx.shadowColor = col; ctx.shadowBlur = 14;
+  var pg = ctx.createLinearGradient(x, 0, x + w, 0);
+  pg.addColorStop(0, 'rgba(30,20,60,0.98)');
+  pg.addColorStop(0.5, 'rgba(52,32,96,0.98)');
+  pg.addColorStop(1, 'rgba(30,20,60,0.98)');
+  ctx.fillStyle = pg;
+  ctx.fillRect(x, y, w, h);
+  ctx.shadowBlur = 0;
+  // glowing cap facing the gap
+  ctx.fillStyle = col;
+  if (isTop) ctx.fillRect(x, y + h - 6, w, 6);
+  else ctx.fillRect(x, y, w, 6);
+  // edge lines
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fillRect(x, y, 3, h);
+  ctx.fillRect(x + w - 3, y, 3, h);
+  ctx.restore();
+}
+
+/* ---------------- Main loop ---------------- */
+var lastT = 0;
+function frame(t) {
+  requestAnimationFrame(frame);
+  var dt = (t - lastT) / 1000;
+  lastT = t;
+  if (!(dt > 0)) return;
+  if (dt > 0.05) dt = 0.05;
+  if (state === ST.PLAY) update(dt);
+  render();
+}
+
+/* ---------------- Init ---------------- */
+resetGame();
+showOverlay(startScreen);
+requestAnimationFrame(function (t) { lastT = t; requestAnimationFrame(frame); });
+
+})();
+</script>
+<script>
+/* === Game Zone: responsive stage + fullscreen-on-play (shared module) === */
+(function () {
+'use strict';
+var stage = document.getElementById('stage');
+var canvas = document.getElementById('gameCanvas');
+var fsBtn = document.getElementById('fsBtn');
+if (!stage || !canvas) return;
+var CW = parseInt(canvas.getAttribute('width'), 10) || 400;
+var CH = parseInt(canvas.getAttribute('height'), 10) || 600;
+
+function isFs() {
+  return document.fullscreenElement === stage ||
+         document.webkitFullscreenElement === stage ||
+         document.mozFullScreenElement === stage ||
+         document.msFullscreenElement === stage ||
+         stage.classList.contains('fake-full');
+}
+function fitStage() {
+  var vw = window.innerWidth, vh = window.innerHeight;
+  var boxW, boxH;
+  if (isFs()) { boxW = vw; boxH = vh; }
+  else {
+    boxW = stage.parentElement ? stage.parentElement.clientWidth : vw;
+    var top = stage.getBoundingClientRect().top;
+    boxH = Math.max(280, vh - top - 16);
+  }
+  var s = Math.min(boxW / CW, boxH / CH);
+  var cw = Math.max(1, Math.floor(CW * s));
+  var ch = Math.max(1, Math.floor(CH * s));
+  canvas.style.width = cw + 'px';
+  canvas.style.height = ch + 'px';
+  if (isFs()) { stage.style.width = vw + 'px'; stage.style.height = vh + 'px'; }
+  else { stage.style.width = '100%'; stage.style.height = ch + 'px'; }
+}
+function requestFs(el) {
+  try {
+    if (el.requestFullscreen) return el.requestFullscreen();
+    if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+    if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
+    if (el.msRequestFullscreen) return el.msRequestFullscreen();
+  } catch (e) { /* handled by caller */ }
+  return null;
+}
+function exitFs() {
+  try {
+    if (document.exitFullscreen && document.fullscreenElement) return document.exitFullscreen();
+    if (document.webkitExitFullscreen && document.webkitFullscreenElement) return document.webkitExitFullscreen();
+    if (document.mozCancelFullScreen && document.mozFullScreenElement) return document.mozCancelFullScreen();
+    if (document.msExitFullscreen && document.msFullscreenElement) return document.msExitFullscreen();
+  } catch (e) { /* ignore */ }
+  return null;
+}
+function hasNativeFs() {
+  return !!(stage.requestFullscreen || stage.webkitRequestFullscreen || stage.mozRequestFullScreen || stage.msRequestFullscreen);
+}
+function fakeFull() {
+  if (document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement) return;
+  stage.classList.add('fake-full');
+  document.body.style.overflow = 'hidden';
+  fitStage();
+  try { stage.scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
+}
+function unFake() {
+  stage.classList.remove('fake-full');
+  document.body.style.overflow = '';
+}
+function enterFull() {
+  if (isFs()) return;
+  if (hasNativeFs()) {
+    var p = requestFs(stage);
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { fakeFull(); });
+    } else {
+      setTimeout(function () { if (!isFs()) fakeFull(); }, 700);
+    }
+  } else {
+    fakeFull();
+  }
+}
+function leaveFull() {
+  if (stage.classList.contains('fake-full')) { unFake(); }
+  else { exitFs(); }
+  setTimeout(fitStage, 80);
+}
+function toggleFs() { if (isFs()) leaveFull(); else enterFull(); }
+function onFsChange() {
+  fitStage();
+  if (fsBtn) fsBtn.textContent = isFs() ? '\u2922' : '\u26F6';
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+document.addEventListener('mozfullscreenchange', onFsChange);
+document.addEventListener('MSFullscreenChange', onFsChange);
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', function () { setTimeout(fitStage, 150); });
+
+/* PLAY / START buttons are real user gestures: they also maximise the stage.
+   Any fullscreen failure falls back gracefully and never breaks the start flow. */
+['startBtn', 'restartBtn', 'restartBtnPause', 'restartBtnWin', 'resumeBtn'].forEach(function (id) {
+  var b = document.getElementById(id);
+  if (b) b.addEventListener('click', function () { enterFull(); });
+});
+if (fsBtn) fsBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFs(); });
+window.addEventListener('keydown', function (e) {
+  if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) toggleFs();
+});
+fitStage();
+setTimeout(fitStage, 300);
+})();
+</script>
+
+</body>
+</html>

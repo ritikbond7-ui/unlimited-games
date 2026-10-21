@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unlimited Games — Free Browser Games</title>
+<meta name="description" content="Unlimited Games: play free original browser games by Ritik Raj — EV Rush, Protest Run, Ludo Rush, Snake Rush, Sky Dash, Brick Smash, Stack Tower, Memory Match, Target Rush and Metro Rush. No download, no signup.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Unlimited Games — Free Browser Games">
+<meta property="og:description" content="10 free original browser games. Play instantly — no download, no signup.">
+<meta property="og:url" content="https://ev-rush-game.pages.dev/">
+<meta property="og:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Unlimited Games — Free Browser Games">
+<meta name="twitter:description" content="10 free original browser games. Play instantly — no download, no signup.">
+<meta name="twitter:image" content="https://ev-rush-game.pages.dev/og-image.png">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---------- Game Zone hub polish ---------- */
+.site-header {
+  background: linear-gradient(180deg, rgba(14,23,48,0.88), rgba(7,11,22,0.55));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, rgba(34,230,240,0.8), transparent) 1;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45), 0 0 24px rgba(34,230,240,0.16);
+}
+.logo {
+  background: linear-gradient(92deg, #ffffff 5%, var(--cyan) 55%, #7dffc9 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+}
+nav.main-nav a { transition: color 0.2s, text-shadow 0.2s; }
+
+/* Hero */
+.hub-hero { text-align: center; margin: 10px 0 30px; }
+.hub-hero h1 {
+  margin: 0 0 10px; font-size: 2.6rem; font-weight: 800; letter-spacing: 3px;
+  background: linear-gradient(92deg, #c8f6ff 5%, var(--cyan) 45%, var(--magenta) 95%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(34,230,240,0.45));
+}
+.hub-hero p { color: var(--muted); margin: 0; font-size: 1rem; letter-spacing: 1px; }
+
+/* Game card grid */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 34px;
+}
+.game-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(26,36,70,0.85), rgba(10,15,30,0.92));
+  border: 1px solid rgba(34,230,240,0.20);
+  border-radius: 18px;
+  padding: 26px 18px 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
+}
+.game-card::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(220px 120px at 50% 0%, var(--glow, rgba(34,230,240,0.14)), transparent 70%);
+  pointer-events: none;
+}
+.game-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--glow-solid, var(--cyan));
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55), 0 0 26px var(--glow, rgba(34,230,240,0.18));
+}
+.game-icon {
+  font-size: 2.6rem; line-height: 1; margin-bottom: 12px;
+  filter: drop-shadow(0 0 12px var(--glow-solid, var(--cyan)));
+}
+.game-card h2 {
+  margin: 0 0 6px; font-size: 1.15rem; letter-spacing: 1.5px; color: #fff;
+}
+.game-card .tagline {
+  margin: 0 0 16px; color: var(--muted); font-size: 0.88rem; min-height: 2.4em;
+}
+.play-btn {
+  display: inline-block;
+  padding: 11px 34px; border-radius: 999px;
+  font-weight: 800; font-size: 0.95rem; letter-spacing: 2px; text-decoration: none;
+  color: #06131a;
+  background: linear-gradient(92deg, var(--glow-solid, var(--cyan)), #7dffc9);
+  box-shadow: 0 6px 22px var(--glow, rgba(34,230,240,0.30));
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.play-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 30px var(--glow, rgba(34,230,240,0.45));
+  text-decoration: none; color: #06131a;
+}
+.play-btn:focus-visible { outline: 2px solid var(--glow-solid, var(--cyan)); outline-offset: 3px; }
+
+/* Accent themes per card */
+.accent-cyan   { --glow: rgba(34,230,240,0.16);  --glow-solid: #22e6f0; }
+.accent-lime   { --glow: rgba(125,255,94,0.16);  --glow-solid: #7dff5e; }
+.accent-pink   { --glow: rgba(255,46,166,0.16);  --glow-solid: #ff2ea6; }
+.accent-gold   { --glow: rgba(255,209,46,0.16);  --glow-solid: #ffd12e; }
+.accent-purple { --glow: rgba(176,77,255,0.16);  --glow-solid: #b04dff; }
+.accent-blue   { --glow: rgba(77,166,255,0.16);  --glow-solid: #4da6ff; }
+.accent-red    { --glow: rgba(255,77,94,0.16);   --glow-solid: #ff4d5e; }
+.accent-orange { --glow: rgba(255,140,46,0.16); --glow-solid: #ff8c2e; }
+
+/* Trust strip */
+.trust-strip {
+  display: flex; justify-content: center; gap: 10px 28px; flex-wrap: wrap;
+  color: var(--muted); font-size: 0.88rem; letter-spacing: 1px;
+  padding: 16px 10px; margin-bottom: 8px;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.trust-strip span { white-space: nowrap; }
+
+.site-footer { border-top: 1px solid transparent; border-image: linear-gradient(90deg, transparent, var(--line), transparent) 1; padding: 24px 18px 28px; }
+.site-footer nav { margin-bottom: 10px; }
+.site-footer nav a { padding: 4px 2px; }
+
+@media (max-width: 480px) {
+  .hub-hero h1 { font-size: 1.75rem; letter-spacing: 2px; }
+  .game-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .game-card { padding: 18px 10px 14px; }
+  .game-icon { font-size: 2rem; }
+  .game-card h2 { font-size: 0.95rem; }
+  .game-card .tagline { font-size: 0.78rem; }
+  .play-btn { padding: 9px 24px; font-size: 0.82rem; }
+}
+</style>
+<meta name="google-adsense-account" content="ca-pub-9282230786844335">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9282230786844335" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="logo" href="index.html"><span class="bolt">🎮</span> UNLIMITED GAMES</a>
+    <nav class="main-nav">
+      <a href="index.html" class="active">Home</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hub-hero">
+    <h1>🎮 UNLIMITED GAMES</h1>
+    <p>Free browser games · No download · No signup</p>
+  </div>
+
+  <div class="game-grid">
+    <div class="game-card accent-cyan">
+      <div class="game-icon">⚡</div>
+      <h2>EV RUSH</h2>
+      <p class="tagline">Endless neon highway racer</p>
+      <a class="play-btn" href="ev-rush.html">PLAY</a>
+    </div>
+    <div class="game-card accent-red">
+      <div class="game-icon">🚨</div>
+      <h2>PROTEST RUN</h2>
+      <p class="tagline">Students vs Police — pick your side!</p>
+      <a class="play-btn" href="protest.html">PLAY</a>
+    </div>
+    <div class="game-card accent-gold">
+      <div class="game-icon">🎲</div>
+      <h2>LUDO RUSH</h2>
+      <p class="tagline">Classic board race, 1–4 players</p>
+      <a class="play-btn" href="ludo.html">PLAY</a>
+    </div>
+    <div class="game-card accent-lime">
+      <div class="game-icon">🐍</div>
+      <h2>SNAKE RUSH</h2>
+      <p class="tagline">Neon snake, growing speed run</p>
+      <a class="play-btn" href="snake.html">PLAY</a>
+    </div>
+    <div class="game-card accent-pink">
+      <div class="game-icon">🌀</div>
+      <h2>SKY DASH</h2>
+      <p class="tagline">Tap to glide through gaps</p>
+      <a class="play-btn" href="skyflap.html">PLAY</a>
+    </div>
+    <div class="game-card accent-gold">
+      <div class="game-icon">🧱</div>
+      <h2>BRICK SMASH</h2>
+      <p class="tagline">Smash every glowing brick</p>
+      <a class="play-btn" href="bricks.html">PLAY</a>
+    </div>
+    <div class="game-card accent-purple">
+      <div class="game-icon">🏗</div>
+      <h2>STACK TOWER</h2>
+      <p class="tagline">Drop blocks, build the tower</p>
+      <a class="play-btn" href="stack.html">PLAY</a>
+    </div>
+    <div class="game-card accent-blue">
+      <div class="game-icon">🃏</div>
+      <h2>MEMORY MATCH</h2>
+      <p class="tagline">Match all the neon pairs</p>
+      <a class="play-btn" href="memory.html">PLAY</a>
+    </div>
+    <div class="game-card accent-red">
+      <div class="game-icon">🎯</div>
+      <h2>TARGET RUSH</h2>
+      <p class="tagline">Sixty seconds of fast tapping</p>
+      <a class="play-btn" href="target.html">PLAY</a>
+    </div>
+    <div class="game-card accent-orange">
+      <div class="game-icon">🚇</div>
+      <h2>METRO RUSH</h2>
+      <p class="tagline">Dodge trains, grab the coins</p>
+      <a class="play-btn" href="metro.html">PLAY</a>
+    </div>
+  </div>
+
+  <div class="trust-strip">
+    <span>✓ 100% free</span>
+    <span>✓ Plays on phone &amp; PC</span>
+    <span>✓ Best scores saved</span>
+    <span>✓ New games added often</span>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <p>© 2026 Unlimited Games · Made with <span class="heart">⚡</span> by Ritik Raj · Play free in your browser</p>
+</footer>
+
+</body>
+</html>
