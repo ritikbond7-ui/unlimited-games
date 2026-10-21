@@ -29,4 +29,8 @@ Open `index.html` in any browser — everything is plain HTML, CSS and JavaScrip
 - Three.js (inlined) for the Protest Run 3D world
 - Hosted on Cloudflare Pages
 
-Made by **Ritik Raj**.
+## 👤 About Me
+
+I'm **Ritik Raj** — B.Tech CS/IT student at GL Bajaj, Greater Noida. I build browser games, AI tools and websites.
+
+**➡️ My portfolio (direct access): https://ritik-portfolio-orpin.vercel.app**
